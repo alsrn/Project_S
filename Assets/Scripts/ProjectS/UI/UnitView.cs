@@ -1,0 +1,72 @@
+using ProjectS.Combat;
+using UnityEngine;
+
+namespace ProjectS.UI
+{
+    /// <summary>
+    /// Unit 1기의 화면 표시(사각형 + HP 바). Unit.StateChanged 를 구독해 갱신만 하며 상태를 바꾸지 않는다.
+    /// </summary>
+    public sealed class UnitView : MonoBehaviour
+    {
+        private const float BodyScale = 0.7f;
+        private const float HpBarHeight = 0.1f;
+
+        private Unit unit;
+        private BattlefieldView battlefield;
+        private SpriteRenderer body;
+        private Transform hpFill;
+
+        public Unit Unit => unit;
+
+        public static UnitView Create(Unit unit, BattlefieldView battlefield)
+        {
+            var go = new GameObject($"Unit_{unit.DisplayName}");
+            go.transform.SetParent(battlefield.transform, false);
+
+            var view = go.AddComponent<UnitView>();
+            view.unit = unit;
+            view.battlefield = battlefield;
+            view.Build();
+            unit.StateChanged += view.OnUnitChanged;
+            view.OnUnitChanged(unit);
+            return view;
+        }
+
+        private void Build()
+        {
+            float cell = battlefield.CellSize;
+            body = PrototypeVisuals.CreateSquare("Body", transform, unit.Definition.Color, PrototypeVisuals.UnitOrder);
+            body.transform.localScale = Vector3.one * cell * BodyScale;
+
+            float barY = cell * (BodyScale * 0.5f + 0.08f);
+            var back = PrototypeVisuals.CreateSquare("HpBack", transform, PrototypeVisuals.HpBarBack, PrototypeVisuals.HpBarOrder);
+            back.transform.localPosition = new Vector3(0f, barY, 0f);
+            back.transform.localScale = new Vector3(cell * BodyScale, cell * HpBarHeight, 1f);
+
+            // 왼쪽 끝 고정으로 줄어들도록 피벗 역할의 부모를 둔다.
+            var fillRoot = new GameObject("HpFillRoot").transform;
+            fillRoot.SetParent(transform, false);
+            fillRoot.localPosition = new Vector3(-cell * BodyScale * 0.5f, barY, 0f);
+            var fill = PrototypeVisuals.CreateSquare("HpFill", fillRoot, PrototypeVisuals.HpBarFill, PrototypeVisuals.HpBarOrder + 1);
+            fill.transform.localPosition = new Vector3(0.5f, 0f, 0f);
+            fillRoot.localScale = new Vector3(cell * BodyScale, cell * HpBarHeight, 1f);
+            hpFill = fillRoot;
+        }
+
+        private void OnUnitChanged(Unit changed)
+        {
+            gameObject.SetActive(changed.IsOnGrid && changed.IsAlive);
+            if (changed.IsOnGrid)
+                transform.position = battlefield.CoordToWorld(changed.Coord);
+
+            var s = hpFill.localScale;
+            s.x = battlefield.CellSize * BodyScale * Mathf.Clamp01((float)changed.Hp / changed.MaxHp);
+            hpFill.localScale = s;
+        }
+
+        private void OnDestroy()
+        {
+            if (unit != null) unit.StateChanged -= OnUnitChanged;
+        }
+    }
+}
