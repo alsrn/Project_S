@@ -13,8 +13,12 @@ namespace ProjectS.UI
         private const float SlideTilesPerSecond = 10f;
 
         private Unit unit;
+        private const float FlashSeconds = 0.15f;
+
         private Vector3 targetPosition;
         private bool slideEnabled;
+        private int lastHp = int.MaxValue;
+        private float flashTimer;
         private BattlefieldView battlefield;
         private SpriteRenderer body;
         private Transform hpFill;
@@ -61,6 +65,12 @@ namespace ProjectS.UI
 
         private void Update()
         {
+            if (flashTimer > 0f)
+            {
+                flashTimer -= Time.deltaTime;
+                body.color = flashTimer > 0f ? Color.white : unit.Definition.Color;
+            }
+
             // 모델은 한 칸씩 이동하고, 화면은 그 칸을 향해 미끄러지듯 따라간다(순간 이동처럼 보이지 않게).
             transform.position = Vector3.MoveTowards(transform.position, targetPosition,
                 battlefield.CellSize * SlideTilesPerSecond * Time.deltaTime);
@@ -78,6 +88,10 @@ namespace ProjectS.UI
                 if (!wasVisible || !adjacentStep || !slideEnabled)
                     transform.position = targetPosition;
             }
+
+            // 피격 표시: HP 가 줄면 잠깐 흰색으로 깜빡임
+            if (changed.Hp < lastHp) flashTimer = FlashSeconds;
+            lastHp = changed.Hp;
 
             var s = hpFill.localScale;
             s.x = battlefield.CellSize * BodyScale * Mathf.Clamp01((float)changed.Hp / changed.MaxHp);

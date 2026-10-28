@@ -16,6 +16,7 @@ namespace ProjectS.Core
         [SerializeField] private StageDefinition stage;
         [SerializeField] private PrototypeRoster roster;
         [SerializeField] private MoveDefinition moveDefinition;
+        [SerializeField] private BattleRules battleRules;
         [SerializeField, Min(0.1f)] private float cellSize = 1f;
 
         private BattlefieldView view;
@@ -23,15 +24,16 @@ namespace ProjectS.Core
         private DeploymentController deployment;
         private DeploymentScreen deploymentScreen;
         private BattleController battle;
+        private PartySelection party;
 
         public StagePhase Phase { get; private set; } = StagePhase.None;
         public Battlefield Battlefield { get; private set; }
 
         private void Start()
         {
-            if (stage == null || roster == null || moveDefinition == null)
+            if (stage == null || roster == null || moveDefinition == null || battleRules == null)
             {
-                Debug.LogError("[StageFlow] StageDefinition / PrototypeRoster / MoveDefinition 참조가 비어 있습니다. " +
+                Debug.LogError("[StageFlow] StageDefinition / PrototypeRoster / MoveDefinition / BattleRules 참조가 비어 있습니다. " +
                                "메뉴 Project S > Setup Stage1 Prototype 을 실행하세요.", this);
                 return;
             }
@@ -46,14 +48,15 @@ namespace ProjectS.Core
             FormationScreen.Create(roster, stage, EnterDeployment);
         }
 
-        /// <summary>스테이지 입장: 전장 생성(적 스폰) → 편성 결과로 아군 생성 → 배치 화면.</summary>
-        private void EnterDeployment(PartySelection party)
+        /// <summary>스테이지 입장: 전장 생성(적 스폰) → 편성 결과로 아군 생성(덱은 전투 시작 시 전달) → 배치 화면.</summary>
+        private void EnterDeployment(PartySelection selection)
         {
+            party = selection;
             Battlefield = Battlefield.Create(stage);
             LogSpawns();
 
             List<Unit> allies = party.Members.Select(def => Battlefield.Units.Create(def, Team.Player)).ToList();
-            Debug.Log($"[StageFlow] Party: {string.Join(", ", allies)}");
+            Debug.Log($"[StageFlow] Party: {string.Join(", ", allies)} / Deck: {string.Join(", ", party.Deck.Select(e => e.Card.DisplayName))}");
 
             view = BattlefieldView.Create(Battlefield, cellSize);
             FitCamera();
@@ -84,12 +87,13 @@ namespace ProjectS.Core
                 Debug.Log($"[StageFlow] Deployed {ally} at {ally.Coord}");
 
             SetPhase(StagePhase.Battle);
-            hud.SetPhase("전투 - 유닛 클릭: 선택 / 빈 타일 클릭: 이동 / 우클릭·Esc: 선택 취소");
+            hud.SetPhase("전투 - 유닛 클릭: 선택 / 빈 타일: 이동 / 카드 클릭 후 적 클릭: 사용 / 우클릭·Esc: 취소");
             view.EnableMovementAnimation();
 
-            battle = BattleController.Create(Battlefield, moveDefinition);
+            battle = BattleController.Create(new BattleSession(Battlefield, moveDefinition, battleRules, party.Deck));
             var selection = SelectionController.Create(battle, view, hud);
             BattlePanel.Create(battle, selection, hud);
+            HandPanel.Create(battle, selection, hud);
             battle.Begin();
         }
 

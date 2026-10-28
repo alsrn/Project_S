@@ -40,6 +40,14 @@ namespace ProjectS.Combat
             Hp = MaxHp;
         }
 
+        /// <summary>CombatService 전용. 피해 계산·사망 처리는 CombatService 가 한다.</summary>
+        internal void TakeDamage(int amount)
+        {
+            if (amount <= 0 || !IsAlive) return;
+            Hp = Math.Max(0, Hp - amount);
+            StateChanged?.Invoke(this);
+        }
+
         /// <summary>GridSystem 전용. 점유 정보와 함께 갱신해야 하므로 다른 곳에서 호출하지 않는다.</summary>
         internal void SetGridPosition(bool onGrid, GridCoord coord)
         {

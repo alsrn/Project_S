@@ -38,7 +38,7 @@ namespace ProjectS.UI
                 new Vector2(1200f, 50f), 30, TextAnchor.MiddleCenter);
             hud.message.color = new Color(1f, 0.9f, 0.4f);
             hud.hoverInfo = UiFactory.CreateText(canvas.transform, "HoverInfo", new Vector2(0f, 0f), new Vector2(20f, 20f),
-                new Vector2(900f, 60f), 26, TextAnchor.LowerLeft);
+                new Vector2(560f, 60f), 22, TextAnchor.LowerLeft);
 
             hud.RefreshHeader();
             return hud;

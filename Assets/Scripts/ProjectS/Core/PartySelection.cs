@@ -1,20 +1,44 @@
 using System.Collections.Generic;
 using System.Linq;
+using ProjectS.Actions;
 using ProjectS.Combat;
 
 namespace ProjectS.Core
 {
+    /// <summary>덱 구성 1항목. Owner = 사용할 캐릭터(전용 카드), null 이면 공용 카드.</summary>
+    public readonly struct DeckEntry
+    {
+        public readonly CardDefinition Card;
+        public readonly UnitDefinition Owner;
+
+        public DeckEntry(CardDefinition card, UnitDefinition owner)
+        {
+            Card = card;
+            Owner = owner;
+        }
+    }
+
     /// <summary>
-    /// 편성 화면 → 전투로 전달되는 결과(불변). 스테이지 입장 시 이 데이터로 아군 유닛을 만든다.
-    /// TODO(단계 D): 덱 구성(전용 카드 + 선택한 기본 카드)도 이 객체로 전달한다.
+    /// 편성 화면 → 전투로 전달되는 결과(불변): 출격 캐릭터 + 덱 구성.
+    /// PROTOTYPE: 덱 = 출격 캐릭터들의 전용 카드 각 1장(기획 '임시로 전부 1장'). 공용 카드 선택 UI 는 미구현.
     /// </summary>
     public sealed class PartySelection
     {
         public IReadOnlyList<UnitDefinition> Members { get; }
+        public IReadOnlyList<DeckEntry> Deck { get; }
 
-        public PartySelection(IEnumerable<UnitDefinition> members)
+        public PartySelection(IEnumerable<UnitDefinition> members, IEnumerable<DeckEntry> deck)
         {
             Members = members.ToList();
+            Deck = deck.ToList();
+        }
+
+        /// <summary>PROTOTYPE 기본 덱: 각 캐릭터의 전용 카드를 1장씩.</summary>
+        public static PartySelection WithCharacterCards(IEnumerable<UnitDefinition> members)
+        {
+            var list = members.ToList();
+            var deck = list.SelectMany(m => m.Cards.Where(c => c != null).Select(c => new DeckEntry(c, m)));
+            return new PartySelection(list, deck);
         }
     }
 }

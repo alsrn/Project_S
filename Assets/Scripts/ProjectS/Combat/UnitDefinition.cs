@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using ProjectS.Actions;
 using UnityEngine;
 
 namespace ProjectS.Combat
@@ -21,6 +23,8 @@ namespace ProjectS.Combat
         [Tooltip("편성 가능해지는 스테이지 번호(플레이어블 캐릭터만 의미 있음)")]
         [SerializeField, Min(1)] private int unlockStage = 1;
         [SerializeField] private Color color = Color.white;
+        [Tooltip("캐릭터 전용 카드(편성 시 덱에 들어감). PROTOTYPE: 평타 카드만")]
+        [SerializeField] private List<CardDefinition> cards = new List<CardDefinition>();
 
         public string DisplayName => displayName;
         public int MaxHp => maxHp;
@@ -30,5 +34,6 @@ namespace ProjectS.Combat
         public int AttackRange => attackRange;
         public int UnlockStage => unlockStage;
         public Color Color => color;
+        public IReadOnlyList<CardDefinition> Cards => cards;
     }
 }

@@ -20,3 +20,5 @@ MonoBehaviour:
   attackRange: 6
   unlockStage: 2
   color: {r: 0.95, g: 0.75, b: 0.2, a: 1}
+  cards:
+  - {fileID: 11400000, guid: ab8da35ea0ad46c439e695168600d3d4, type: 2}

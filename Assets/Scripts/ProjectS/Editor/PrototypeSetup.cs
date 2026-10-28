@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProjectS.Actions;
 using ProjectS.Combat;
 using ProjectS.Core;
+using ProjectS.Targeting;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -23,6 +25,9 @@ namespace ProjectS.EditorTools
         public const string Stage1Path = StagesFolder + "/Stage1.asset";
         public const string RosterPath = UnitsFolder + "/PrototypeRoster.asset";
         public const string MovePath = ActionsFolder + "/Move_Default.asset";
+        public const string CardsFolder = "Assets/Data/Cards";
+        public const string RulesFolder = "Assets/Data/Rules";
+        public const string RulesPath = RulesFolder + "/BattleRules.asset";
         public const string ScenePath = "Assets/Scenes/Stage1Prototype.unity";
 
         private struct UnitSpec
@@ -54,12 +59,41 @@ namespace ProjectS.EditorTools
         private static readonly UnitSpec Raptor =
             new UnitSpec("Raptor", "랩터", 1200, 40, 30, 5, 5, 1, new Color(0.85f, 0.25f, 0.25f));
 
+        private struct CardSpec
+        {
+            public string File, Name, Description;
+            public int Cost;
+            public float Multiplier;
+
+            public CardSpec(string file, string name, int cost, float multiplier, string description)
+            {
+                File = file; Name = name; Cost = cost; Multiplier = multiplier; Description = description;
+            }
+        }
+
+        // 출처: GameDesigns/GDD_Main/카드 디자인(동아리).xlsx — 캐릭터별 평타 카드(키 = 캐릭터 Id)
+        private static readonly Dictionary<string, CardSpec> BasicAttackCards = new Dictionary<string, CardSpec>
+        {
+            ["Clare"] = new CardSpec("Clare_SpinSlash", "회전 베기", 1, 2f, "현재 공격력의 x2배 피해를 준다"),
+            ["Lian"] = new CardSpec("Lian_Swing", "휘두르기", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
+            ["Ader"] = new CardSpec("Ader_BloodShot", "혈탄 발사", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
+            ["Melidia"] = new CardSpec("Melidia_MelodyStrike", "멜로디 타격", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
+            ["Katie"] = new CardSpec("Katie_MagicBullet", "마탄", 2, 2f, "현재 공격력의 x2배 피해를 준다"),
+            ["Nika"] = new CardSpec("Nika_FirePunch", "불주먹", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
+            ["Kano"] = new CardSpec("Kano_Aim", "정조준", 2, 3f,
+                "현재 공격력의 x3배의 피해를 준다. (PROTOTYPE: 연속 사용·SP 증가 메커니즘 미구현)"),
+        };
+
         [MenuItem("Project S/Setup Stage1 Prototype")]
         public static void Run()
         {
             EnsureFolder(UnitsFolder);
             EnsureFolder(StagesFolder);
             EnsureFolder(ActionsFolder);
+            EnsureFolder(CardsFolder);
+            EnsureFolder(RulesFolder);
+
+            var rules = LoadOrCreate<BattleRules>(RulesPath, so => { }); // 기본값 = 단순 차감, STS 드로우 5장
 
             var enemy = CreateUnit(EnemyPath, Raptor);
 
@@ -97,7 +131,13 @@ namespace ProjectS.EditorTools
                 so.FindProperty("deploymentZoneMax").vector2IntValue = new Vector2Int(20, 20);
             });
 
-            var characters = Characters.Select(c => CreateUnit($"{UnitsFolder}/Char_{c.Id}.asset", c)).ToList();
+            var characters = Characters.Select(c =>
+            {
+                var unit = CreateUnit($"{UnitsFolder}/Char_{c.Id}.asset", c);
+                if (BasicAttackCards.TryGetValue(c.Id, out var cardSpec))
+                    AssignCardsIfEmpty(unit, CreateBasicAttackCard(cardSpec));
+                return unit;
+            }).ToList();
 
             var roster = LoadOrCreate<PrototypeRoster>(RosterPath, so =>
             {
@@ -107,7 +147,7 @@ namespace ProjectS.EditorTools
                     list.GetArrayElementAtIndex(i).objectReferenceValue = characters[i];
             });
 
-            EnsureScene(stage, roster, move);
+            EnsureScene(stage, roster, move, rules);
             AddSceneToBuildSettingsFirst();
             AssetDatabase.SaveAssets();
             Debug.Log("[PrototypeSetup] Done");
@@ -126,6 +166,45 @@ namespace ProjectS.EditorTools
                 so.FindProperty("color").colorValue = spec.Color;
             });
 
+        /// <summary>단일 적 대상 · 사용자 공격 범위 · 공격력 배율 피해 카드.</summary>
+        private static CardDefinition CreateBasicAttackCard(CardSpec spec) =>
+            LoadOrCreate<CardDefinition>($"{CardsFolder}/Card_{spec.File}.asset", so =>
+            {
+                so.FindProperty("displayName").stringValue = spec.Name;
+                so.FindProperty("baseCost").intValue = spec.Cost;
+                so.FindProperty("description").stringValue = spec.Description;
+
+                var requirements = so.FindProperty("targetRequirements");
+                requirements.arraySize = 1;
+                var req = requirements.GetArrayElementAtIndex(0);
+                req.FindPropertyRelative("kind").enumValueIndex = (int)TargetKind.Unit;
+                req.FindPropertyRelative("relation").enumValueIndex = (int)TargetRelation.Enemy;
+                req.FindPropertyRelative("requireAlive").boolValue = true;
+                req.FindPropertyRelative("rangeSource").enumValueIndex = (int)RangeSource.ActorAttackRange;
+                req.FindPropertyRelative("fixedRange").intValue = 0;
+                req.FindPropertyRelative("requireLineOfSight").boolValue = false;
+
+                var effects = so.FindProperty("effects");
+                effects.arraySize = 1;
+                effects.GetArrayElementAtIndex(0).managedReferenceValue = new DamageEffect
+                {
+                    targetIndex = 0,
+                    attackMultiplier = spec.Multiplier,
+                };
+            });
+
+        private static void AssignCardsIfEmpty(UnitDefinition unit, params CardDefinition[] cards)
+        {
+            var so = new SerializedObject(unit);
+            var list = so.FindProperty("cards");
+            if (list.arraySize > 0) return;
+
+            list.arraySize = cards.Length;
+            for (int i = 0; i < cards.Length; i++)
+                list.GetArrayElementAtIndex(i).objectReferenceValue = cards[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static T LoadOrCreate<T>(string path, System.Action<SerializedObject> initialize) where T : ScriptableObject
         {
             var existing = AssetDatabase.LoadAssetAtPath<T>(path);
@@ -141,7 +220,7 @@ namespace ProjectS.EditorTools
         }
 
         /// <summary>씬이 없으면 만들고, 있으면 비어 있는 참조만 채운다(이미 지정된 참조는 유지).</summary>
-        private static void EnsureScene(StageDefinition stage, PrototypeRoster roster, MoveDefinition move)
+        private static void EnsureScene(StageDefinition stage, PrototypeRoster roster, MoveDefinition move, BattleRules rules)
         {
             bool exists = File.Exists(ScenePath);
             var scene = exists
@@ -163,6 +242,7 @@ namespace ProjectS.EditorTools
             AssignIfEmpty(so, "stage", stage);
             AssignIfEmpty(so, "roster", roster);
             AssignIfEmpty(so, "moveDefinition", move);
+            AssignIfEmpty(so, "battleRules", rules);
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);

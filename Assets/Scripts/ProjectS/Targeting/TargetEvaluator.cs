@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ProjectS.Actions;
 using ProjectS.Combat;
 using ProjectS.Grid;
 
@@ -64,6 +65,128 @@ namespace ProjectS.Targeting
 
             reason = null;
             return true;
+        }
+
+        // ---------------- 카드 / 대상 ----------------
+
+        /// <summary>
+        /// 카드 사용 전체 검증: 사용자 상태 + 대상 개수 + 각 대상 조건. 확정 전 Validate 와 실행 직전 Revalidate 가 공유한다.
+        /// SP 는 여기서 보지 않는다(확정 시 Scheduler, 재검증 시에는 이미 예약됨).
+        /// </summary>
+        public bool ValidateCard(CardDefinition card, ActionContext context, IReadOnlyList<TargetRef> targets, out string reason)
+        {
+            if (context.Actor != null && !CanAct(context.Actor, out reason)) return false;
+
+            var requirements = card.TargetRequirements;
+            if (targets.Count != requirements.Count)
+            {
+                reason = $"대상 수가 맞지 않습니다 (필요 {requirements.Count}, 선택 {targets.Count})";
+                return false;
+            }
+
+            for (int i = 0; i < requirements.Count; i++)
+                if (!ValidateTarget(requirements[i], context, targets[i], out reason))
+                    return false;
+
+            reason = null;
+            return true;
+        }
+
+        /// <summary>한 선택 단계의 유효 후보(UI 하이라이트용). 판정은 ValidateTarget 과 같다.</summary>
+        public List<TargetRef> GetCandidates(TargetRequirement requirement, ActionContext context)
+        {
+            if (requirement.kind == TargetKind.Unit)
+                return units.All.Where(u => u.IsOnGrid)
+                    .Select(u => TargetRef.ForUnit(u.Id))
+                    .Where(t => ValidateTarget(requirement, context, t, out _))
+                    .ToList();
+
+            if (requirement.kind == TargetKind.Tile)
+                return grid.AllCoords()
+                    .Select(TargetRef.ForTile)
+                    .Where(t => ValidateTarget(requirement, context, t, out _))
+                    .ToList();
+
+            return new List<TargetRef>();
+        }
+
+        public bool ValidateTarget(TargetRequirement requirement, ActionContext context, TargetRef target, out string reason)
+        {
+            if (requirement.requireLineOfSight)
+            {
+                reason = "시야/LOS 조건은 아직 지원하지 않습니다";
+                return false;
+            }
+
+            if (target.Kind != requirement.kind)
+            {
+                reason = requirement.kind == TargetKind.Unit ? "유닛을 선택해야 합니다" : "타일을 선택해야 합니다";
+                return false;
+            }
+
+            GridCoord coord;
+            if (target.Kind == TargetKind.Unit)
+            {
+                var unit = units.GetById(target.UnitId);
+                if (unit == null || (requirement.requireAlive && !unit.IsAlive) || !unit.IsOnGrid)
+                {
+                    reason = "대상이 이미 쓰러졌거나 전장에 없습니다";
+                    return false;
+                }
+
+                if (!MatchesRelation(requirement.relation, context.Team, unit.Team))
+                {
+                    reason = requirement.relation == TargetRelation.Enemy ? "적 유닛만 대상으로 할 수 있습니다" : "아군 유닛만 대상으로 할 수 있습니다";
+                    return false;
+                }
+
+                coord = unit.Coord;
+            }
+            else if (target.Kind == TargetKind.Tile)
+            {
+                coord = target.Coord;
+                if (!grid.IsInside(coord))
+                {
+                    reason = $"맵 밖의 좌표입니다 {coord}";
+                    return false;
+                }
+            }
+            else
+            {
+                reason = "오브젝트 대상은 아직 지원하지 않습니다";
+                return false;
+            }
+
+            return IsInRange(requirement, context, coord, out reason);
+        }
+
+        private static bool IsInRange(TargetRequirement requirement, ActionContext context, GridCoord coord, out string reason)
+        {
+            reason = null;
+            if (requirement.rangeSource == RangeSource.Unlimited) return true;
+
+            if (context.Actor == null || !context.Actor.IsOnGrid)
+            {
+                reason = "사거리 기준이 될 사용자가 없습니다";
+                return false;
+            }
+
+            int range = requirement.rangeSource == RangeSource.ActorAttackRange ? context.Actor.AttackRange : requirement.fixedRange;
+            int distance = context.Actor.Coord.ManhattanDistance(coord);
+            if (distance <= range) return true;
+
+            reason = $"사거리 밖입니다 (거리 {distance}, 사거리 {range})";
+            return false;
+        }
+
+        private static bool MatchesRelation(TargetRelation relation, Team baseTeam, Team other)
+        {
+            switch (relation)
+            {
+                case TargetRelation.Ally: return other == baseTeam;
+                case TargetRelation.Enemy: return other != baseTeam && other != Team.Neutral;
+                default: return true;
+            }
         }
 
         // ---------------- 공통 ----------------

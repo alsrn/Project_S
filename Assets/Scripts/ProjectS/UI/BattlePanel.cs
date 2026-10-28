@@ -38,7 +38,7 @@ namespace ProjectS.UI
                 new Vector2(390f, 150f), 24, TextAnchor.UpperLeft);
 
             unitInfo = UiFactory.CreateText(t, "UnitInfo", new Vector2(0f, 0f), new Vector2(20f, 80f),
-                new Vector2(900f, 90f), 24, TextAnchor.LowerLeft);
+                new Vector2(560f, 110f), 22, TextAnchor.LowerLeft);
 
             endTurnButton = UiFactory.CreateButton(t, "턴 종료", new Vector2(1f, 0f), new Vector2(-20f, 20f),
                 new Vector2(260f, 70f), OnEndTurnClicked);
@@ -66,11 +66,13 @@ namespace ProjectS.UI
                           $"대기열: {scheduler.QueuedCount}{(scheduler.EndTurnCommitted ? "  (턴 종료 예약)" : "")}" +
                           (battle.IsPaused ? "\n[일시 정지]" : "");
 
-            endTurnButton.interactable = scheduler.GetAdmission(Team.Player, out _) != Admission.Reject;
+            // 카드 대상 지정 중에는 턴 종료 비활성(§1.2)
+            endTurnButton.interactable = !selection.IsTargeting
+                && scheduler.GetAdmission(Team.Player, out _) != Admission.Reject;
 
             var u = selection.Selected;
             unitInfo.text = u == null ? "" :
-                $"선택: {u.DisplayName} ({u.Team})  HP {u.Hp}/{u.MaxHp}  공 {u.Attack}  방 {u.Defense}  이동 {u.MoveRange}  사거리 {u.AttackRange}  위치 {u.Coord}";
+                $"선택: {u.DisplayName} ({u.Team})  위치 {u.Coord}\nHP {u.Hp}/{u.MaxHp}  공 {u.Attack}  방 {u.Defense}  이동 {u.MoveRange}  사거리 {u.AttackRange}";
         }
     }
 }
