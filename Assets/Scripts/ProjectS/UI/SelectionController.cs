@@ -20,6 +20,7 @@ namespace ProjectS.UI
     public sealed class SelectionController : MonoBehaviour
     {
         private static readonly Color CardTargetColor = new Color(1f, 0.3f, 0.25f, 0.55f);
+        private static readonly Color ExecutingTargetColor = new Color(1f, 0.55f, 0f, 0.75f);
 
         private BattleController battle;
         private BattlefieldView view;
@@ -200,16 +201,21 @@ namespace ProjectS.UI
             {
                 var context = PlayerCommands.CardContext(TargetingCard);
                 var candidates = battle.Context.Targets.GetCandidates(CurrentRequirement, context);
-                view.AddHighlights(candidates.Select(t => ToCoord(t)).Where(c => c.HasValue).Select(c => c.Value), CardTargetColor);
+                view.AddHighlights(candidates.Select(ToCoord).Where(c => c.HasValue).Select(c => c.Value), CardTargetColor);
                 if (context.Actor != null && context.Actor.IsOnGrid)
                     view.AddHighlights(new[] { context.Actor.Coord }, PrototypeVisuals.HighlightSelected);
                 return;
             }
 
+            // 실행 중인 카드의 대상 표시(대기열 동작을 눈으로 확인할 수 있게)
+            if (battle.Scheduler.Current is CardActionInstance running)
+                view.AddHighlights(running.Targets.Select(ToCoord).Where(c => c.HasValue).Select(c => c.Value), ExecutingTargetColor);
+
             if (Selected == null || !Selected.IsOnGrid) return;
 
             bool canRequest = Selected.Team == Team.Player
-                && battle.Scheduler.GetAdmission(Team.Player, out _) != Admission.Reject;
+                && battle.Scheduler.GetAdmission(Team.Player, out _) != Admission.Reject
+                && battle.Commands.CanMoveThisTurn(Selected, out _);
             if (canRequest)
                 view.AddHighlights(battle.Context.Targets.GetMoveDestinations(Selected), PrototypeVisuals.HighlightAvailable);
 

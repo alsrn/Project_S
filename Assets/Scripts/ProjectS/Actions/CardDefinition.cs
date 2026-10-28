@@ -16,7 +16,7 @@ namespace ProjectS.Actions
         [SerializeField] private List<TargetRequirement> targetRequirements = new List<TargetRequirement>();
         [SerializeReference] private List<CardEffect> effects = new List<CardEffect>();
         [Tooltip("카드 사용 연출 시간(초). 이 동안 다른 요청은 대기열에 쌓인다")]
-        [SerializeField, Min(0f)] private float executeSeconds = 0.5f;
+        [SerializeField, Min(0f)] private float executeSeconds = 1.2f;
 
         public string Description => description;
         public IReadOnlyList<TargetRequirement> TargetRequirements => targetRequirements;

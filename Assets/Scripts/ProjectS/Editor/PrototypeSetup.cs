@@ -75,8 +75,10 @@ namespace ProjectS.EditorTools
         private static readonly Dictionary<string, CardSpec> BasicAttackCards = new Dictionary<string, CardSpec>
         {
             ["Clare"] = new CardSpec("Clare_SpinSlash", "회전 베기", 1, 2f, "현재 공격력의 x2배 피해를 준다"),
-            ["Lian"] = new CardSpec("Lian_Swing", "휘두르기", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
-            ["Ader"] = new CardSpec("Ader_BloodShot", "혈탄 발사", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
+            // PROTOTYPE 밸런스: 단순 차감 공식에서 GDD x1 로는 랩터(방어 30)에 피해가 거의 없어 배율을 올림.
+            // 목표: 테스트 배율 x15 에서 아무 두 명의 평타로 랩터(1200) 처치, 세 캐릭터 피해가 비슷하게(675~750).
+            ["Lian"] = new CardSpec("Lian_Swing", "휘두르기", 1, 3f, "현재 공격력 만큼의 피해를 준다 (PROTOTYPE 밸런스: x3)"),
+            ["Ader"] = new CardSpec("Ader_BloodShot", "혈탄 발사", 1, 2.2f, "현재 공격력 만큼의 피해를 준다 (PROTOTYPE 밸런스: x2.2)"),
             ["Melidia"] = new CardSpec("Melidia_MelodyStrike", "멜로디 타격", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
             ["Katie"] = new CardSpec("Katie_MagicBullet", "마탄", 2, 2f, "현재 공격력의 x2배 피해를 준다"),
             ["Nika"] = new CardSpec("Nika_FirePunch", "불주먹", 1, 1f, "현재 공격력 만큼의 피해를 준다"),
@@ -93,7 +95,8 @@ namespace ProjectS.EditorTools
             EnsureFolder(CardsFolder);
             EnsureFolder(RulesFolder);
 
-            var rules = LoadOrCreate<BattleRules>(RulesPath, so => { }); // 기본값 = 단순 차감, STS 드로우 5장
+            // 기본값 = 단순 차감, STS 드로우 5장. 테스트 배율 x15(승패 흐름 시험용, 기획 협의값)
+            var rules = LoadOrCreate<BattleRules>(RulesPath, so => so.FindProperty("debugDamageMultiplier").floatValue = 15f);
 
             var enemy = CreateUnit(EnemyPath, Raptor);
 

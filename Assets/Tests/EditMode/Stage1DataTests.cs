@@ -49,6 +49,29 @@ namespace ProjectS.Tests
             Assert.AreEqual(5, raptor.AttackRange);
         }
 
+        /// <summary>
+        /// PROTOTYPE 밸런스 목표(기획 협의): 테스트 배율 x15 에서 1스테이지 캐릭터 평타 피해가 비슷하고,
+        /// 아무 두 명의 평타로 랩터 1기를 처치할 수 있다.
+        /// </summary>
+        [Test]
+        public void Stage1_BasicAttackBalance_TwoHitsKillRaptor()
+        {
+            var rules = AssetDatabase.LoadAssetAtPath<BattleRules>(PrototypeSetup.RulesPath);
+            var roster = AssetDatabase.LoadAssetAtPath<PrototypeRoster>(PrototypeSetup.RosterPath);
+            var raptor = stage.EnemySpawns[0].unit;
+
+            var damages = roster.Candidates.Where(c => PrototypeRoster.IsUnlocked(c, stage)).Select(c =>
+            {
+                var effect = (Actions.DamageEffect)c.Cards[0].Effects[0];
+                int power = Mathf.RoundToInt(c.Attack * effect.attackMultiplier) + effect.flatDamage;
+                return rules.CalculateDamage(power, raptor.Defense, effect.ignoreDefense);
+            }).OrderBy(d => d).ToList();
+
+            Assert.AreEqual(3, damages.Count);
+            Assert.GreaterOrEqual(damages[0] + damages[1], raptor.MaxHp, $"가장 약한 두 명: {string.Join(", ", damages)}");
+            Assert.Less(damages[2] / (float)damages[0], 1.3f, $"피해 편차가 큼: {string.Join(", ", damages)}");
+        }
+
         [Test]
         public void Stage1_SpawnsThreeEnemiesAtDesignCoords()
         {

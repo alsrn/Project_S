@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using ProjectS.Actions;
 using ProjectS.Combat;
 using UnityEngine;
@@ -44,6 +45,10 @@ namespace ProjectS.Core
         public bool IsShutdown { get; private set; }
         public bool EndTurnCommitted => endTurnCommitted;
         public bool IsIdle => Current == null && queue.Count == 0;
+
+        /// <summary>대기열 표시용 이름 목록(앞에서부터).</summary>
+        public IReadOnlyList<string> QueueLabels =>
+            queue.Select(item => item is EndTurnMarker m ? $"턴 종료 ({m.Team})" : item.ToString()).ToList();
 
         /// <summary>행동이 끝났을 때(Completed 또는 Aborted). UI 갱신·실패 메시지·승패 판정용.</summary>
         public event Action<ActionInstance> ActionFinished;

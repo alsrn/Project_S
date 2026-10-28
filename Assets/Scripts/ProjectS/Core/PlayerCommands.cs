@@ -33,9 +33,26 @@ namespace ProjectS.Core
             }
 
             if (scheduler.GetAdmission(Team.Player, out reason) == Admission.Reject) return false;
+            if (!CanMoveThisTurn(actor, out reason)) return false;
             if (!battle.Targets.ValidateMove(actor, destination, out _, out reason)) return false;
 
             return scheduler.TryCommit(new MoveActionInstance(moveDefinition, actor, destination), out reason);
+        }
+
+        /// <summary>
+        /// PROTOTYPE: 유닛별 턴당 이동 횟수 제한. 확정 시점에만 검사한다(재검증에서는 예약된 것으로 보고 다시 막지 않음).
+        /// </summary>
+        public bool CanMoveThisTurn(Unit actor, out string reason)
+        {
+            int limit = moveDefinition.MaxMovesPerTurn;
+            if (limit > 0 && battle.Usage.MovesThisTurn(actor) >= limit)
+            {
+                reason = $"{actor} 는 이번 턴에 이미 이동했습니다 (턴당 {limit}회)";
+                return false;
+            }
+
+            reason = null;
+            return true;
         }
 
         /// <summary>카드 사용. targets 는 카드의 TargetRequirement 순서대로(0개 가능).</summary>

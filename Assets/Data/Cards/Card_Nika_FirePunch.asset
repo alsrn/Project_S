@@ -25,7 +25,7 @@ MonoBehaviour:
     requireLineOfSight: 0
   effects:
   - rid: 1476500730099269637
-  executeSeconds: 0.5
+  executeSeconds: 1.2
   references:
     version: 2
     RefIds:

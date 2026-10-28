@@ -7,12 +7,15 @@ using UnityEngine.UI;
 namespace ProjectS.UI
 {
     /// <summary>
-    /// 전장 공통 HUD: 스테이지·진행 단계, 짧은 안내/실패 메시지, 마우스가 가리키는 타일 정보.
+    /// 전장 공통 HUD: 좌/우 열 배경, 스테이지·진행 단계(왼쪽 위), 짧은 안내/실패 메시지(상단 띠),
+    /// 마우스가 가리키는 타일 정보(왼쪽 아래). 배치는 UiLayout 기준이며 전장을 가리지 않는다.
     /// 표시 전용이며 게임 상태를 바꾸지 않는다.
     /// </summary>
     public sealed class PrototypeHud : MonoBehaviour
     {
-        private const float MessageDuration = 2.5f;
+        private const float MessageDuration = 3f;
+        // 바탕(0.1,0.1,0.12)과 구분되도록 약간 밝은 열 배경
+        private static readonly Color ColumnColor = new Color(0.16f, 0.17f, 0.21f, 1f);
 
         private Battlefield battlefield;
         private BattlefieldView view;
@@ -32,13 +35,18 @@ namespace ProjectS.UI
             hud.battlefield = battlefield;
             hud.view = view;
 
-            hud.header = UiFactory.CreateText(canvas.transform, "Header", new Vector2(0f, 1f), new Vector2(20f, -20f),
-                new Vector2(1100f, 120f), 28, TextAnchor.UpperLeft);
-            hud.message = UiFactory.CreateText(canvas.transform, "Message", new Vector2(0.5f, 1f), new Vector2(0f, -140f),
-                new Vector2(1200f, 50f), 30, TextAnchor.MiddleCenter);
+            var t = canvas.transform;
+            UiFactory.CreateSideColumn(t, "LeftColumn", true, UiLayout.SideColumnWidth, ColumnColor);
+            UiFactory.CreateSideColumn(t, "RightColumn", false, UiLayout.SideColumnWidth, ColumnColor);
+
+            float pad = UiLayout.Padding;
+            hud.header = UiFactory.CreateText(t, "Header", new Vector2(0f, 1f), new Vector2(pad, -pad),
+                new Vector2(UiLayout.ColumnContentWidth, 360f), 22, TextAnchor.UpperLeft);
+            hud.message = UiFactory.CreateText(t, "Message", new Vector2(0.5f, 1f), new Vector2(0f, -8f),
+                new Vector2(1920f - UiLayout.SideColumnWidth * 2f - 20f, UiLayout.TopBarHeight - 12f), 24, TextAnchor.MiddleCenter);
             hud.message.color = new Color(1f, 0.9f, 0.4f);
-            hud.hoverInfo = UiFactory.CreateText(canvas.transform, "HoverInfo", new Vector2(0f, 0f), new Vector2(20f, 20f),
-                new Vector2(560f, 60f), 22, TextAnchor.LowerLeft);
+            hud.hoverInfo = UiFactory.CreateText(t, "HoverInfo", new Vector2(0f, 0f), new Vector2(pad, pad),
+                new Vector2(UiLayout.ColumnContentWidth, 60f), 20, TextAnchor.LowerLeft);
 
             hud.RefreshHeader();
             return hud;
@@ -62,7 +70,7 @@ namespace ProjectS.UI
             var stage = battlefield.Stage;
             int enemies = battlefield.Units.All.Count(u => u.Team == Team.Enemy && u.IsAlive);
             int allies = battlefield.Units.All.Count(u => u.Team == Team.Player && u.IsAlive);
-            header.text = $"{stage.DisplayName}  [{stage.Width}x{stage.Height}]   아군 {allies} / 적 {enemies}\n{phaseText}";
+            header.text = $"<b>{stage.DisplayName}</b>  [{stage.Width}x{stage.Height}]\n아군 {allies} / 적 {enemies}\n\n{phaseText}";
         }
 
         private void Update()
@@ -71,15 +79,16 @@ namespace ProjectS.UI
                 message.text = string.Empty;
 
             hoverInfo.text = DescribeHoveredTile();
+            RefreshHeader(); // 생존 수 갱신
         }
 
         private string DescribeHoveredTile()
         {
-            if (!BoardPointer.TryGetHoveredCoord(view, out var coord)) return string.Empty;
+            if (BoardPointer.IsOverUi || !BoardPointer.TryGetHoveredCoord(view, out var coord)) return string.Empty;
 
             var occupant = battlefield.Grid.GetOccupant(coord);
-            string who = occupant != null ? $"{occupant.DisplayName} ({occupant.Team}) HP {occupant.Hp}/{occupant.MaxHp}" : "빈 타일";
-            return $"타일 {coord}  -  {who}";
+            string who = occupant != null ? $"{occupant.DisplayName} ({occupant.Team})\nHP {occupant.Hp}/{occupant.MaxHp}" : "빈 타일";
+            return $"마우스: 타일 {coord}  {who}";
         }
     }
 }

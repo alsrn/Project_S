@@ -59,8 +59,8 @@ namespace ProjectS.Core
             Debug.Log($"[StageFlow] Party: {string.Join(", ", allies)} / Deck: {string.Join(", ", party.Deck.Select(e => e.Card.DisplayName))}");
 
             view = BattlefieldView.Create(Battlefield, cellSize);
-            FitCamera();
             hud = PrototypeHud.Create(Battlefield, view);
+            FitCamera();
 
             deployment = new DeploymentController(Battlefield, allies);
             deploymentScreen = DeploymentScreen.Create(deployment, Battlefield, view, hud, TryStartBattle);
@@ -110,7 +110,7 @@ namespace ProjectS.Core
 
             if (!cam.TryGetComponent(out BattlefieldCamera camController))
                 camController = cam.gameObject.AddComponent<BattlefieldCamera>();
-            camController.FitTo(view.WorldBounds);
+            camController.FitTo(view.WorldBounds, hud.Canvas);
         }
 
         private void LogSpawns()

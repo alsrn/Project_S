@@ -12,7 +12,7 @@ namespace ProjectS.UI
     /// </summary>
     public sealed class HandPanel : MonoBehaviour
     {
-        private const float CardWidth = 230f;
+        private const float CardWidth = 210f;
         private const float CardHeight = 110f;
         private const float Spacing = 12f;
 
@@ -25,15 +25,15 @@ namespace ProjectS.UI
 
         public static HandPanel Create(BattleController battle, SelectionController selection, PrototypeHud hud)
         {
-            var root = new GameObject("HandPanel", typeof(RectTransform));
-            root.transform.SetParent(hud.Canvas.transform, false);
-            var panel = root.AddComponent<HandPanel>();
+            var root = UiFactory.CreateStretchedRoot(hud.Canvas.transform, "HandPanel");
+            var panel = root.gameObject.AddComponent<HandPanel>();
             panel.battle = battle;
             panel.selection = selection;
 
-            panel.cardRoot = UiFactory.CreateRect(root.transform, "Cards", new Vector2(0.5f, 0f), new Vector2(0f, 20f), new Vector2(10f, CardHeight));
-            panel.pileInfo = UiFactory.CreateText(root.transform, "PileInfo", new Vector2(0.5f, 0f), new Vector2(0f, CardHeight + 28f),
-                new Vector2(900f, 34f), 22, TextAnchor.MiddleCenter);
+            float pad = UiLayout.Padding;
+            panel.cardRoot = UiFactory.CreateRect(root.transform, "Cards", new Vector2(0.5f, 0f), new Vector2(0f, pad), new Vector2(10f, CardHeight));
+            panel.pileInfo = UiFactory.CreateText(root.transform, "PileInfo", new Vector2(0.5f, 0f), new Vector2(0f, pad + CardHeight + 10f),
+                new Vector2(1920f - UiLayout.SideColumnWidth * 2f, 34f), 20, TextAnchor.MiddleCenter);
 
             battle.Deck.Changed += panel.Rebuild;
             panel.Rebuild();

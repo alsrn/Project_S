@@ -42,6 +42,7 @@ namespace ProjectS.Core
 
         private void OnTurnStarted(Team team, int turn)
         {
+            Context.Usage.ResetFor(team, Context.Units);
             if (team == Team.Player) Deck.Draw(Rules.DrawPerTurn, Rules.HandLimit);
         }
 

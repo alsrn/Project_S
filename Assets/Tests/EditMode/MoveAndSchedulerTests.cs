@@ -40,6 +40,15 @@ namespace ProjectS.Tests
             return def;
         }
 
+        private MoveDefinition MakeMoveDef(int maxMovesPerTurn)
+        {
+            var def = Make<MoveDefinition>();
+            var so = new SerializedObject(def);
+            so.FindProperty("maxMovesPerTurn").intValue = maxMovesPerTurn;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return def;
+        }
+
         [SetUp]
         public void SetUp()
         {
@@ -57,7 +66,7 @@ namespace ProjectS.Tests
             context = new BattleContext(battlefield, new ResourceSystem(stage.MaxSp));
             scheduler = new ActionScheduler(context);
             turns = new TurnManager(scheduler, context.Resources);
-            commands = new PlayerCommands(context, scheduler, Make<MoveDefinition>());
+            commands = new PlayerCommands(context, scheduler, MakeMoveDef(maxMovesPerTurn: 0)); // 대기열 검증용: 횟수 제한 없음
             cardLike = Make<TestQueueingDefinition>();
             turns.StartFirstTurn();
         }
@@ -168,6 +177,37 @@ namespace ProjectS.Tests
             Assert.IsFalse(commands.RequestEndTurn(out _));
             Assert.AreEqual(19, context.Resources.Sp);
             Assert.AreEqual(0, scheduler.QueuedCount);
+        }
+
+        [Test]
+        public void MoveLimit_OncePerUnitPerTurn_ResetsNextTurn_AbortReturnsUsage()
+        {
+            var session = new BattleSession(battlefield, MakeMoveDef(maxMovesPerTurn: 1), Make<BattleRules>(), null);
+            session.Begin();
+            var cmd = session.Commands;
+
+            Assert.IsTrue(cmd.RequestMove(ally, new GridCoord(5, 6), out _));
+            session.Scheduler.TickUntilIdle();
+            Assert.IsFalse(cmd.RequestMove(ally, new GridCoord(5, 7), out var reason), "같은 턴 두 번째 이동 거절");
+            StringAssert.Contains("이미 이동", reason);
+            Assert.AreEqual(19, session.Resources.Sp, "거절은 비용 없음");
+            Assert.IsTrue(cmd.RequestMove(ally2, new GridCoord(10, 11), out _), "다른 유닛은 가능");
+            session.Scheduler.TickUntilIdle();
+
+            // 다음 플레이어 턴에 초기화
+            Assert.IsTrue(cmd.RequestEndTurn(out _));
+            session.Scheduler.TryRequestEndTurn(Team.Enemy, out _);
+            Assert.IsTrue(cmd.RequestMove(ally, new GridCoord(5, 7), out var r2), r2);
+            session.Scheduler.TickUntilIdle();
+
+            // 대기 중 이동이 재검증에서 취소되면 이동 횟수도 반환
+            var blocker = battlefield.Units.Create(ally.Definition, Team.Enemy);
+            var card = new TestWaitInstance(Make<TestQueueingDefinition>(), ActionContext.ForActor(ally), 0.3f);
+            Assert.IsTrue(session.Scheduler.TryCommit(card, out _));
+            Assert.IsTrue(cmd.RequestMove(ally2, new GridCoord(10, 12), out _));
+            battlefield.Grid.Place(blocker, new GridCoord(10, 12));
+            session.Scheduler.TickUntilIdle();
+            Assert.IsTrue(cmd.CanMoveThisTurn(ally2, out _), "Abort 된 이동은 횟수에 포함되지 않음");
         }
 
         // ---------------- 대기열 ----------------

@@ -29,15 +29,8 @@ namespace ProjectS.UI
         public static DeploymentScreen Create(DeploymentController deployment, Battlefield battlefield,
             BattlefieldView view, PrototypeHud hud, Action onStart)
         {
-            var root = new GameObject("DeploymentScreen", typeof(RectTransform));
-            root.transform.SetParent(hud.Canvas.transform, false);
-            var rt = (RectTransform)root.transform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-
-            var screen = root.AddComponent<DeploymentScreen>();
+            var root = UiFactory.CreateStretchedRoot(hud.Canvas.transform, "DeploymentScreen");
+            var screen = root.gameObject.AddComponent<DeploymentScreen>();
             screen.deployment = deployment;
             screen.battlefield = battlefield;
             screen.view = view;
@@ -52,9 +45,10 @@ namespace ProjectS.UI
         private void Build()
         {
             var panelAnchor = new Vector2(1f, 1f);
-            const float width = 360f;
+            const float width = UiLayout.ColumnContentWidth;
             float height = 120f + deployment.Allies.Count * 62f;
-            var panel = UiFactory.CreatePanel(transform, "AllyPanel", panelAnchor, new Vector2(-20f, -20f),
+            float pad = UiLayout.Padding;
+            var panel = UiFactory.CreatePanel(transform, "AllyPanel", panelAnchor, new Vector2(-pad, -pad),
                 new Vector2(width, height), PrototypeVisuals.PanelBackground);
 
             var title = UiFactory.CreateText(panel.transform, "Title", new Vector2(0.5f, 1f), new Vector2(0f, -10f),
@@ -68,8 +62,8 @@ namespace ProjectS.UI
                     new Vector2(0f, -110f - i * 62f), new Vector2(width - 30f, 54f), () => Select(unit));
             }
 
-            startButton = UiFactory.CreateButton(transform, "전투 시작", new Vector2(1f, 0f), new Vector2(-20f, 20f),
-                new Vector2(260f, 70f), () => onStart());
+            startButton = UiFactory.CreateButton(transform, "전투 시작", new Vector2(1f, 0f), new Vector2(-pad, pad),
+                new Vector2(width, 70f), () => onStart());
         }
 
         private void Update()

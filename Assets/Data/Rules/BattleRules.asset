@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.BattleRules
   defenseFormula: 0
   minDamage: 1
-  debugDamageMultiplier: 1
+  debugDamageMultiplier: 15
   drawPerTurn: 5
   handLimit: 10

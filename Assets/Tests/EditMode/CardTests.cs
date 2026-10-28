@@ -206,8 +206,7 @@ namespace ProjectS.Tests
         public void QueuedCard_ActorMovedButTargetStillInRange_Executes()
         {
             Assert.IsTrue(session.Commands.RequestCard(HandCard("Jab"), Target(enemyNear), out _));   // 실행 중(대기 유발)
-            Assert.IsTrue(session.Commands.RequestMove(ally, new GridCoord(4, 5), out _));            // 대기: 거리 3 → 4? (4,5)-(5,8)=4
-            Assert.IsTrue(session.Commands.RequestMove(ally, new GridCoord(4, 6), out _));            // 대기: (4,6)-(5,8)=3
+            Assert.IsTrue(session.Commands.RequestMove(ally, new GridCoord(4, 6), out _));            // 대기: 이동 후 (4,6)-(5,8)=3
             int hpBefore = enemyNear.Hp;
             Assert.IsTrue(session.Commands.RequestCard(HandCard("Strike"), Target(enemyNear), out _)); // 원래 위치 기준 유효
 

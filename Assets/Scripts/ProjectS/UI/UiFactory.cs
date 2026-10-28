@@ -25,7 +25,7 @@ namespace ProjectS.UI
 
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.referenceResolution = UiLayout.ReferenceResolution;
             scaler.matchWidthOrHeight = 0.5f;
 
             go.AddComponent<GraphicRaycaster>();
@@ -70,6 +70,41 @@ namespace ProjectS.UI
 
             var image = go.AddComponent<Image>();
             image.color = color;
+            return image;
+        }
+
+        /// <summary>
+        /// 부모 전체를 덮는 빈 RectTransform. 여러 UI 요소를 묶는 루트로 쓴다.
+        /// (기본 RectTransform 은 가운데 100x100 이라, 그 아래 화면 모서리 기준 요소들이 가운데로 몰린다)
+        /// </summary>
+        public static RectTransform CreateStretchedRoot(Transform parent, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            return rt;
+        }
+
+        /// <summary>화면 왼쪽 또는 오른쪽 끝에 붙는 세로 전체 높이 열 배경.</summary>
+        public static Image CreateSideColumn(Transform parent, string name, bool leftSide, float width, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            float x = leftSide ? 0f : 1f;
+            rt.anchorMin = new Vector2(x, 0f);
+            rt.anchorMax = new Vector2(x, 1f);
+            rt.pivot = new Vector2(x, 0.5f);
+            rt.sizeDelta = new Vector2(width, 0f);
+            rt.anchoredPosition = Vector2.zero;
+
+            var image = go.AddComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
             return image;
         }
 

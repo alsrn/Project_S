@@ -25,7 +25,7 @@ MonoBehaviour:
     requireLineOfSight: 0
   effects:
   - rid: 1476500730099269633
-  executeSeconds: 0.5
+  executeSeconds: 1.2
   references:
     version: 2
     RefIds:
@@ -33,6 +33,6 @@ MonoBehaviour:
       type: {class: DamageEffect, ns: ProjectS.Actions, asm: ProjectS}
       data:
         targetIndex: 0
-        attackMultiplier: 1
+        attackMultiplier: 3
         flatDamage: 0
         ignoreDefense: 0

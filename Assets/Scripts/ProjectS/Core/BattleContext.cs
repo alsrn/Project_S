@@ -19,6 +19,7 @@ namespace ProjectS.Core
         public CombatService Combat { get; }
         /// <summary>플레이어 덱. 덱이 없는 테스트 등에서는 null.</summary>
         public DeckSystem Deck { get; }
+        public TurnUsage Usage { get; } = new TurnUsage();
 
         public BattleContext(Battlefield battlefield, ResourceSystem resources, BattleRules rules = null, DeckSystem deck = null)
         {

@@ -27,6 +27,10 @@ namespace ProjectS.Actions
         public override bool Revalidate(BattleContext battle, out string reason) =>
             battle.Targets.ValidateMove(Actor, Destination, out path, out reason);
 
+        public override void OnCommitted(BattleContext battle) => battle.Usage.AddMove(Actor);
+
+        public override void OnAborted(BattleContext battle) => battle.Usage.RemoveMove(Actor);
+
         public override IEnumerator Execute(BattleContext battle, ExecutionClock clock)
         {
             foreach (var step in path)
