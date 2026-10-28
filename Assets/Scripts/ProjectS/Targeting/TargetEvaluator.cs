@@ -110,6 +110,18 @@ namespace ProjectS.Targeting
             return new List<TargetRef>();
         }
 
+        /// <summary>
+        /// 사거리 영역(UI 표시용): 사용자 위치에서 사거리 이내의 모든 타일. 사거리 제한 없음/사용자 없음이면 빈 목록.
+        /// 대상 판정과 같은 거리 계산(IsInRange)을 쓴다.
+        /// </summary>
+        public List<GridCoord> GetRangeArea(TargetRequirement requirement, ActionContext context)
+        {
+            if (requirement.rangeSource == RangeSource.Unlimited || context.Actor == null || !context.Actor.IsOnGrid)
+                return new List<GridCoord>();
+
+            return grid.AllCoords().Where(c => IsInRange(requirement, context, c, out _)).ToList();
+        }
+
         public bool ValidateTarget(TargetRequirement requirement, ActionContext context, TargetRef target, out string reason)
         {
             if (requirement.requireLineOfSight)

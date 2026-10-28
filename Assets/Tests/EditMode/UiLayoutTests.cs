@@ -25,6 +25,7 @@ namespace ProjectS.Tests
         private BattlefieldView view;
         private PrototypeHud hud;
         private List<Unit> allies;
+        private PresentationConfig presentation;
 
         [SetUp]
         public void SetUp()
@@ -37,7 +38,9 @@ namespace ProjectS.Tests
             allies = roster.Candidates.Where(c => PrototypeRoster.IsUnlocked(c, stage))
                 .Select(def => battlefield.Units.Create(def, Team.Player)).ToList();
 
-            view = BattlefieldView.Create(battlefield, 1f);
+            presentation = AssetDatabase.LoadAssetAtPath<PresentationConfig>(PrototypeSetup.PresentationPath);
+            Assert.IsNotNull(presentation);
+            view = BattlefieldView.Create(battlefield, presentation, 1f);
             hud = PrototypeHud.Create(battlefield, view);
         }
 
@@ -63,7 +66,7 @@ namespace ProjectS.Tests
 
             var battle = BattleController.Create(session);
             var selection = SelectionController.Create(battle, view, hud);
-            BattlePanel.Create(battle, selection, hud);
+            BattlePanel.Create(battle, selection, hud, presentation, () => { });
             HandPanel.Create(battle, selection, hud);
 
             AssertNothingOverBoard();

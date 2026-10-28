@@ -20,3 +20,9 @@ MonoBehaviour:
   attackRange: 5
   unlockStage: 1
   color: {r: 0.85, g: 0.25, b: 0.25, a: 1}
+  spriteFront: {fileID: 21300000, guid: a526bf33767a5654081568435174c686, type: 3}
+  spriteBack: {fileID: 21300000, guid: fc0aad72487c21e4899c0be2b2971f2f, type: 3}
+  spriteLeft: {fileID: 21300000, guid: 638582ad445891a4bbc059c57f1f76c7, type: 3}
+  spriteRight: {fileID: 21300000, guid: 1169a9801ebc4a74d8e07adacb0e1a63, type: 3}
+  cards:
+  - {fileID: 11400000, guid: 0943c73fbec940148a7958f03e0a3703, type: 2}

@@ -19,7 +19,8 @@ namespace ProjectS.UI
     /// </summary>
     public sealed class SelectionController : MonoBehaviour
     {
-        private static readonly Color CardTargetColor = new Color(1f, 0.3f, 0.25f, 0.55f);
+        private static readonly Color CardTargetColor = new Color(1f, 0.15f, 0.1f, 0.7f);
+        private static readonly Color CardRangeColor = new Color(1f, 0.6f, 0.55f, 0.3f);
         private static readonly Color ExecutingTargetColor = new Color(1f, 0.55f, 0f, 0.75f);
 
         private BattleController battle;
@@ -200,6 +201,8 @@ namespace ProjectS.UI
             if (IsTargeting)
             {
                 var context = PlayerCommands.CardContext(TargetingCard);
+                // 사거리 영역(옅게) → 그 위에 실제 지정 가능한 대상(진하게)
+                view.AddHighlights(battle.Context.Targets.GetRangeArea(CurrentRequirement, context), CardRangeColor);
                 var candidates = battle.Context.Targets.GetCandidates(CurrentRequirement, context);
                 view.AddHighlights(candidates.Select(ToCoord).Where(c => c.HasValue).Select(c => c.Value), CardTargetColor);
                 if (context.Actor != null && context.Actor.IsOnGrid)

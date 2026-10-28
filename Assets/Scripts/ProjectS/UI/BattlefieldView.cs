@@ -7,24 +7,25 @@ using UnityEngine;
 namespace ProjectS.UI
 {
     /// <summary>
-    /// 전장의 화면 표시: 타일, 배치 구역 색, 유닛 뷰 생성. 격자 ↔ 월드 좌표 변환도 여기서만 한다.
+    /// 전장의 화면 표시: 타일(TileView 프리팹), 배치 구역 색, 유닛(UnitView 프리팹) 생성, 하이라이트.
+    /// 격자 ↔ 월드 좌표 변환도 여기서만 한다.
     /// 화면 방향은 기획 격자판(GDD_Main/격자판.png)과 같게 x→오른쪽, y→아래쪽(기획 좌표 (1,1)이 왼쪽 위).
     /// 화면 방향을 바꾸려면 CoordToWorld / TryWorldToCoord 두 곳만 고친다.
     /// </summary>
     public sealed class BattlefieldView : MonoBehaviour
     {
         private Battlefield battlefield;
-        private SpriteRenderer[,] tiles;
-        private SpriteRenderer[,] overlays;
+        private PresentationConfig config;
+        private TileView[,] tiles;
         private readonly Dictionary<int, UnitView> unitViews = new Dictionary<int, UnitView>();
 
         public float CellSize { get; private set; }
 
-        public static BattlefieldView Create(Battlefield battlefield, float cellSize)
+        public static BattlefieldView Create(Battlefield battlefield, PresentationConfig config, float cellSize)
         {
-            var go = new GameObject("BattlefieldView");
-            var view = go.AddComponent<BattlefieldView>();
+            var view = new GameObject("BattlefieldView").AddComponent<BattlefieldView>();
             view.battlefield = battlefield;
+            view.config = config;
             view.CellSize = cellSize;
             view.BuildTiles();
 
@@ -58,50 +59,15 @@ namespace ProjectS.UI
         /// <summary>모든 타일 하이라이트를 끈다.</summary>
         public void ClearHighlights()
         {
-            foreach (var o in overlays) o.enabled = false;
+            foreach (var t in tiles) t.SetHighlight(null);
         }
 
         /// <summary>지정 타일에 하이라이트를 덧칠한다(나중 호출이 덮어씀). 판정은 호출자가 이미 끝낸 결과만 받는다.</summary>
         public void AddHighlights(IEnumerable<GridCoord> coords, Color color)
         {
             foreach (var c in coords)
-            {
-                if (!battlefield.Grid.IsInside(c)) continue;
-                var o = overlays[c.X, c.Y];
-                o.color = color;
-                o.enabled = true;
-            }
-        }
-
-        private void BuildTiles()
-        {
-            var grid = battlefield.Grid;
-            tiles = new SpriteRenderer[grid.Width, grid.Height];
-            overlays = new SpriteRenderer[grid.Width, grid.Height];
-            var root = new GameObject("Tiles").transform;
-            root.SetParent(transform, false);
-
-            foreach (var c in grid.AllCoords())
-            {
-                var sr = PrototypeVisuals.CreateSquare($"Tile_{c}", root, BaseTileColor(c), PrototypeVisuals.TileOrder);
-                sr.transform.position = CoordToWorld(c);
-                // 칸 사이 틈으로 격자선을 표현
-                sr.transform.localScale = new Vector3(CellSize * 0.95f, CellSize * 0.95f, 1f);
-                tiles[c.X, c.Y] = sr;
-
-                var overlay = PrototypeVisuals.CreateSquare($"Highlight_{c}", root, Color.clear, PrototypeVisuals.HighlightOrder);
-                overlay.transform.position = CoordToWorld(c);
-                overlay.transform.localScale = sr.transform.localScale;
-                overlay.enabled = false;
-                overlays[c.X, c.Y] = overlay;
-            }
-        }
-
-        private Color BaseTileColor(GridCoord c)
-        {
-            var checker = (c.X + c.Y) % 2 == 0 ? PrototypeVisuals.TileLight : PrototypeVisuals.TileDark;
-            if (!battlefield.Stage.IsInDeploymentZone(c)) return checker;
-            return Color.Lerp(checker, PrototypeVisuals.DeploymentZone, 0.6f);
+                if (battlefield.Grid.IsInside(c))
+                    tiles[c.X, c.Y].SetHighlight(color);
         }
 
         /// <summary>전투 시작 시 호출: 이후 유닛 이동을 칸 단위 슬라이드로 보여준다.</summary>
@@ -110,10 +76,35 @@ namespace ProjectS.UI
             foreach (var v in unitViews.Values) v.EnableSlide();
         }
 
+        private void BuildTiles()
+        {
+            var grid = battlefield.Grid;
+            tiles = new TileView[grid.Width, grid.Height];
+            var root = new GameObject("Tiles").transform;
+            root.SetParent(transform, false);
+
+            foreach (var c in grid.AllCoords())
+            {
+                var tile = Instantiate(config.TilePrefab, root);
+                tile.name = $"Tile_{c}";
+                tile.transform.position = CoordToWorld(c);
+                tile.Configure(config.TileSprite, TileColor(c), CellSize);
+                tiles[c.X, c.Y] = tile;
+            }
+        }
+
+        private Color TileColor(GridCoord c)
+        {
+            Color baseColor = config.TileSprite != null
+                ? config.TileTint
+                : ((c.X + c.Y) % 2 == 0 ? PrototypeVisuals.TileLight : PrototypeVisuals.TileDark);
+            return battlefield.Stage.IsInDeploymentZone(c) ? baseColor * config.DeploymentTint : baseColor;
+        }
+
         private void AddUnitView(Unit unit)
         {
             if (unitViews.ContainsKey(unit.Id)) return;
-            unitViews[unit.Id] = UnitView.Create(unit, this);
+            unitViews[unit.Id] = UnitView.Create(config.UnitPrefab, unit, this);
         }
 
         private void OnDestroy()

@@ -5,6 +5,7 @@ using ProjectS.Actions;
 using ProjectS.Combat;
 using ProjectS.Core;
 using ProjectS.Targeting;
+using ProjectS.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace ProjectS.EditorTools
     /// 이미 있는 에셋·씬은 덮어쓰지 않는다(기획자가 수정한 값 보존). 다시 만들려면 해당 파일을 지운 뒤 실행.
     /// 배치 모드: Unity -batchmode -executeMethod ProjectS.EditorTools.PrototypeSetup.Run -quit
     /// </summary>
-    public static class PrototypeSetup
+    public static partial class PrototypeSetup
     {
         public const string UnitsFolder = "Assets/Data/Units";
         public const string StagesFolder = "Assets/Data/Stages";
@@ -98,7 +99,14 @@ namespace ProjectS.EditorTools
             // 기본값 = 단순 차감, STS 드로우 5장. 테스트 배율 x15(승패 흐름 시험용, 기획 협의값)
             var rules = LoadOrCreate<BattleRules>(RulesPath, so => so.FindProperty("debugDamageMultiplier").floatValue = 15f);
 
+            var presentation = SetupArt();
+
             var enemy = CreateUnit(EnemyPath, Raptor);
+            // 출처: 라스피 적 기획 — 랩터 능력1 '내려 찍기'(현재 공격력의 피해). 적 능력도 CardDefinition 데이터로 정의.
+            // TODO: 능력2 '돌진'(x2 + 방어 버프) 은 버프 시스템이 없어 미구현
+            AssignCardsIfEmpty(enemy, CreateBasicAttackCard(
+                new CardSpec("Enemy_Raptor_Slam", "내려 찍기", 0, 1f, "앞발로 강하게 내리쳐 현재 공격력의 피해를 준다")));
+            AssignUnitSprites(enemy, "Raptor_front", "Raptor_back", "Raptor_left", "Raptor_right");
 
             var move = LoadOrCreate<MoveDefinition>(MovePath, so =>
             {
@@ -139,6 +147,8 @@ namespace ProjectS.EditorTools
                 var unit = CreateUnit($"{UnitsFolder}/Char_{c.Id}.asset", c);
                 if (BasicAttackCards.TryGetValue(c.Id, out var cardSpec))
                     AssignCardsIfEmpty(unit, CreateBasicAttackCard(cardSpec));
+                if (CharacterSprites.TryGetValue(c.Id, out var sprite))
+                    AssignUnitSprites(unit, sprite);
                 return unit;
             }).ToList();
 
@@ -150,7 +160,7 @@ namespace ProjectS.EditorTools
                     list.GetArrayElementAtIndex(i).objectReferenceValue = characters[i];
             });
 
-            EnsureScene(stage, roster, move, rules);
+            EnsureScene(stage, roster, move, rules, presentation);
             AddSceneToBuildSettingsFirst();
             AssetDatabase.SaveAssets();
             Debug.Log("[PrototypeSetup] Done");
@@ -223,7 +233,8 @@ namespace ProjectS.EditorTools
         }
 
         /// <summary>씬이 없으면 만들고, 있으면 비어 있는 참조만 채운다(이미 지정된 참조는 유지).</summary>
-        private static void EnsureScene(StageDefinition stage, PrototypeRoster roster, MoveDefinition move, BattleRules rules)
+        private static void EnsureScene(StageDefinition stage, PrototypeRoster roster, MoveDefinition move, BattleRules rules,
+            PresentationConfig presentation)
         {
             bool exists = File.Exists(ScenePath);
             var scene = exists
@@ -246,6 +257,7 @@ namespace ProjectS.EditorTools
             AssignIfEmpty(so, "roster", roster);
             AssignIfEmpty(so, "moveDefinition", move);
             AssignIfEmpty(so, "battleRules", rules);
+            AssignIfEmpty(so, "presentation", presentation);
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
