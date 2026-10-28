@@ -16,7 +16,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a1400a59bedf353428e044698786cb2e, type: 2}
   - {fileID: 11400000, guid: c855a2e0c55b679488fd77c83a67f0ea, type: 2}
   - {fileID: 11400000, guid: dea1dfa84aae9f548a4918f2a4dc5049, type: 2}
-  - {fileID: 11400000, guid: 81ae909d8cf15c24f962bad6f3983769, type: 2}
+  - {fileID: 11400000, guid: 975b32243a5e2f7478412d82f56f7235, type: 2}
   - {fileID: 11400000, guid: 4a7671a042aa4cf4e966ef6175e5f70b, type: 2}
+  - {fileID: 11400000, guid: 81ae909d8cf15c24f962bad6f3983769, type: 2}
   - {fileID: 11400000, guid: 35c69d5e8853f8f46b24ace947ea0d17, type: 2}
-  maxPartySize: 4

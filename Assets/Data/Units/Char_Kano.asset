@@ -13,5 +13,10 @@ MonoBehaviour:
   m_Name: Char_Kano
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
   displayName: "\uCE74\uB178"
-  maxHp: 12
+  maxHp: 750
+  attack: 80
+  defense: 15
+  moveRange: 3
+  attackRange: 8
+  unlockStage: 3
   color: {r: 0.4, g: 0.85, b: 0.3, a: 1}

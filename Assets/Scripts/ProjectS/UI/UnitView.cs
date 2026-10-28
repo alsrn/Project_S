@@ -10,13 +10,19 @@ namespace ProjectS.UI
     {
         private const float BodyScale = 0.7f;
         private const float HpBarHeight = 0.1f;
+        private const float SlideTilesPerSecond = 10f;
 
         private Unit unit;
+        private Vector3 targetPosition;
+        private bool slideEnabled;
         private BattlefieldView battlefield;
         private SpriteRenderer body;
         private Transform hpFill;
 
         public Unit Unit => unit;
+
+        /// <summary>전투 단계에서 켠다. 배치 단계의 재배치는 즉시 이동으로 보인다.</summary>
+        public void EnableSlide() => slideEnabled = true;
 
         public static UnitView Create(Unit unit, BattlefieldView battlefield)
         {
@@ -53,11 +59,25 @@ namespace ProjectS.UI
             hpFill = fillRoot;
         }
 
+        private void Update()
+        {
+            // 모델은 한 칸씩 이동하고, 화면은 그 칸을 향해 미끄러지듯 따라간다(순간 이동처럼 보이지 않게).
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition,
+                battlefield.CellSize * SlideTilesPerSecond * Time.deltaTime);
+        }
+
         private void OnUnitChanged(Unit changed)
         {
+            bool wasVisible = gameObject.activeSelf;
             gameObject.SetActive(changed.IsOnGrid && changed.IsAlive);
             if (changed.IsOnGrid)
-                transform.position = battlefield.CoordToWorld(changed.Coord);
+            {
+                targetPosition = battlefield.CoordToWorld(changed.Coord);
+                // 처음 등장·배치(재배치 포함)나 한 칸 넘게 떨어진 경우는 즉시 이동
+                bool adjacentStep = Vector3.Distance(transform.position, targetPosition) <= battlefield.CellSize * 1.01f;
+                if (!wasVisible || !adjacentStep || !slideEnabled)
+                    transform.position = targetPosition;
+            }
 
             var s = hpFill.localScale;
             s.x = battlefield.CellSize * BodyScale * Mathf.Clamp01((float)changed.Hp / changed.MaxHp);

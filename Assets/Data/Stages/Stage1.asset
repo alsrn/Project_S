@@ -12,15 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d84b46ebd0973a47851cd418a833fff, type: 3}
   m_Name: Stage1
   m_EditorClassIdentifier: ProjectS::ProjectS.Core.StageDefinition
-  displayName: Stage 1 (Prototype)
+  displayName: "\uC2A4\uD14C\uC774\uC9C0 1"
+  stageNumber: 1
+  partySize: 3
+  turnLimit: 10
+  maxSp: 20
   width: 20
   height: 20
   enemySpawns:
-  - unit: {fileID: 11400000, guid: 91b4a1b36f18e1f40bae4bb663f4ac09, type: 2}
+  - unit: {fileID: 11400000, guid: da8ff966244e92942a19ff6efc315a47, type: 2}
     designCoord: {x: 1, y: 10}
-  - unit: {fileID: 11400000, guid: 91b4a1b36f18e1f40bae4bb663f4ac09, type: 2}
+  - unit: {fileID: 11400000, guid: da8ff966244e92942a19ff6efc315a47, type: 2}
     designCoord: {x: 2, y: 5}
-  - unit: {fileID: 11400000, guid: 91b4a1b36f18e1f40bae4bb663f4ac09, type: 2}
+  - unit: {fileID: 11400000, guid: da8ff966244e92942a19ff6efc315a47, type: 2}
     designCoord: {x: 2, y: 15}
   deploymentZoneMin: {x: 1, y: 18}
   deploymentZoneMax: {x: 20, y: 20}

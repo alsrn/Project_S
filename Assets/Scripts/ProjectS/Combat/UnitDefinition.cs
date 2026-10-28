@@ -4,17 +4,31 @@ namespace ProjectS.Combat
 {
     /// <summary>
     /// 유닛 종류의 변하지 않는 설정값(에셋). 현재 HP·좌표 같은 런타임 상태는 Unit 에 둔다.
-    /// PROTOTYPE: 수치는 모두 임시값이다.
+    /// 수치 출처: GameDesigns/GDD_Main 의 캐릭터·적 기획표.
+    /// 기획표의 "NxN" 범위는 PROTOTYPE 해석으로 '거리 N'(격자 칸 수)으로 입력한다.
     /// </summary>
     [CreateAssetMenu(menuName = "Project S/Unit Definition", fileName = "UnitDefinition")]
     public sealed class UnitDefinition : ScriptableObject
     {
         [SerializeField] private string displayName = "Unit";
         [SerializeField, Min(1)] private int maxHp = 10;
+        [SerializeField, Min(0)] private int attack = 10;
+        [SerializeField, Min(0)] private int defense;
+        [Tooltip("이동 범위(기획 NxN 의 N). PROTOTYPE: 4방향 경로 칸 수로 해석")]
+        [SerializeField, Min(0)] private int moveRange = 3;
+        [Tooltip("공격 범위(기획 NxN 의 N). PROTOTYPE: 맨해튼 거리로 해석")]
+        [SerializeField, Min(0)] private int attackRange = 1;
+        [Tooltip("편성 가능해지는 스테이지 번호(플레이어블 캐릭터만 의미 있음)")]
+        [SerializeField, Min(1)] private int unlockStage = 1;
         [SerializeField] private Color color = Color.white;
 
         public string DisplayName => displayName;
         public int MaxHp => maxHp;
+        public int Attack => attack;
+        public int Defense => defense;
+        public int MoveRange => moveRange;
+        public int AttackRange => attackRange;
+        public int UnlockStage => unlockStage;
         public Color Color => color;
     }
 }

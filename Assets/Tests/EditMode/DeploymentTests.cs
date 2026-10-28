@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProjectS.Combat;
 using ProjectS.Core;
+using ProjectS.EditorTools;
 using ProjectS.Grid;
 using UnityEditor;
 using UnityEngine;
@@ -96,19 +97,33 @@ namespace ProjectS.Tests
         }
 
         [Test]
-        public void Roster_ValidatesPartySize()
+        public void Roster_ValidatesPartyAgainstStage()
         {
-            var roster = AssetDatabase.LoadAssetAtPath<PrototypeRoster>("Assets/Data/Units/PrototypeRoster.asset");
+            var roster = AssetDatabase.LoadAssetAtPath<PrototypeRoster>(PrototypeSetup.RosterPath);
+            var stage1 = AssetDatabase.LoadAssetAtPath<StageDefinition>(PrototypeSetup.Stage1Path);
             Assert.IsNotNull(roster);
-            Assert.GreaterOrEqual(roster.Candidates.Count, 2);
+            Assert.IsNotNull(stage1);
 
-            Assert.IsFalse(roster.ValidateParty(new List<UnitDefinition>(), out _));
-            Assert.IsTrue(roster.ValidateParty(new[] { roster.Candidates[0] }, out _));
-            Assert.IsFalse(roster.ValidateParty(new[] { roster.Candidates[0], roster.Candidates[0] }, out _));
-            Assert.IsFalse(roster.ValidateParty(new[] { definition }, out _), "후보 밖 캐릭터는 거절");
-            Assert.Greater(roster.Candidates.Count, roster.MaxPartySize, "후보가 상한보다 많아야 초과 검사가 의미 있다");
-            Assert.IsFalse(roster.ValidateParty(roster.Candidates.Take(roster.MaxPartySize + 1).ToList(), out _));
-            Assert.IsTrue(roster.ValidateParty(roster.Candidates.Take(roster.MaxPartySize).ToList(), out _));
+            // GDD: 1스테이지 해금 = 클레어, 리안, 에더 키리스텔
+            var unlocked = roster.Candidates.Where(c => PrototypeRoster.IsUnlocked(c, stage1)).ToList();
+            var locked = roster.Candidates.Where(c => !PrototypeRoster.IsUnlocked(c, stage1)).ToList();
+            Assert.AreEqual(3, unlocked.Count);
+            Assert.IsNotEmpty(locked);
+
+            Assert.IsFalse(roster.ValidateParty(new List<UnitDefinition>(), stage1, out _));
+            Assert.IsTrue(roster.ValidateParty(new[] { unlocked[0] }, stage1, out _));
+            Assert.IsTrue(roster.ValidateParty(unlocked, stage1, out _));
+            Assert.IsFalse(roster.ValidateParty(new[] { unlocked[0], unlocked[0] }, stage1, out _));
+            Assert.IsFalse(roster.ValidateParty(new[] { definition }, stage1, out _), "후보 밖 캐릭터는 거절");
+            Assert.IsFalse(roster.ValidateParty(new[] { locked[0] }, stage1, out _), "미해금 캐릭터는 거절");
+
+            // 인원 상한은 스테이지 값을 따른다
+            var smallStage = Object.Instantiate(stage1);
+            var so = new SerializedObject(smallStage);
+            so.FindProperty("partySize").intValue = 2;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Assert.IsFalse(roster.ValidateParty(unlocked, smallStage, out _));
+            Object.DestroyImmediate(smallStage);
         }
     }
 }

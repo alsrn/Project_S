@@ -29,6 +29,27 @@ namespace ProjectS.Tests
         }
 
         [Test]
+        public void Stage1_MatchesGddStageSheet()
+        {
+            Assert.AreEqual(1, stage.StageNumber);
+            Assert.AreEqual(3, stage.PartySize);
+            Assert.AreEqual(10, stage.TurnLimit);
+            Assert.AreEqual(20, stage.MaxSp);
+        }
+
+        [Test]
+        public void Stage1_EnemyIsRaptorWithGddStats()
+        {
+            var raptor = stage.EnemySpawns[0].unit;
+            Assert.AreEqual("랩터", raptor.DisplayName);
+            Assert.AreEqual(1200, raptor.MaxHp);
+            Assert.AreEqual(40, raptor.Attack);
+            Assert.AreEqual(30, raptor.Defense);
+            Assert.AreEqual(5, raptor.MoveRange);
+            Assert.AreEqual(5, raptor.AttackRange);
+        }
+
+        [Test]
         public void Stage1_SpawnsThreeEnemiesAtDesignCoords()
         {
             var battlefield = Battlefield.Create(stage);

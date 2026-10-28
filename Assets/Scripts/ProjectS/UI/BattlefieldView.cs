@@ -8,7 +8,8 @@ namespace ProjectS.UI
 {
     /// <summary>
     /// 전장의 화면 표시: 타일, 배치 구역 색, 유닛 뷰 생성. 격자 ↔ 월드 좌표 변환도 여기서만 한다.
-    /// 화면 방향은 기존 GridManager 와 같게 x→오른쪽, y→위쪽(기획 좌표 (1,1)이 왼쪽 아래).
+    /// 화면 방향은 기획 격자판(GDD_Main/격자판.png)과 같게 x→오른쪽, y→아래쪽(기획 좌표 (1,1)이 왼쪽 위).
+    /// 화면 방향을 바꾸려면 CoordToWorld / TryWorldToCoord 두 곳만 고친다.
     /// </summary>
     public sealed class BattlefieldView : MonoBehaviour
     {
@@ -33,11 +34,14 @@ namespace ProjectS.UI
             return view;
         }
 
-        public Vector3 CoordToWorld(GridCoord c) => new Vector3(c.X * CellSize, c.Y * CellSize, 0f);
+        public Vector3 CoordToWorld(GridCoord c) =>
+            new Vector3(c.X * CellSize, (battlefield.Grid.Height - 1 - c.Y) * CellSize, 0f);
 
         public bool TryWorldToCoord(Vector3 world, out GridCoord coord)
         {
-            coord = new GridCoord(Mathf.RoundToInt(world.x / CellSize), Mathf.RoundToInt(world.y / CellSize));
+            int x = Mathf.RoundToInt(world.x / CellSize);
+            int y = battlefield.Grid.Height - 1 - Mathf.RoundToInt(world.y / CellSize);
+            coord = new GridCoord(x, y);
             return battlefield.Grid.IsInside(coord);
         }
 
@@ -98,6 +102,12 @@ namespace ProjectS.UI
             var checker = (c.X + c.Y) % 2 == 0 ? PrototypeVisuals.TileLight : PrototypeVisuals.TileDark;
             if (!battlefield.Stage.IsInDeploymentZone(c)) return checker;
             return Color.Lerp(checker, PrototypeVisuals.DeploymentZone, 0.6f);
+        }
+
+        /// <summary>전투 시작 시 호출: 이후 유닛 이동을 칸 단위 슬라이드로 보여준다.</summary>
+        public void EnableMovementAnimation()
+        {
+            foreach (var v in unitViews.Values) v.EnableSlide();
         }
 
         private void AddUnitView(Unit unit)

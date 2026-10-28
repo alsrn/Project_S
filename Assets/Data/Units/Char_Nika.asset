@@ -13,5 +13,10 @@ MonoBehaviour:
   m_Name: Char_Nika
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
   displayName: "\uB2C8\uCE74"
-  maxHp: 10
-  color: {r: 0.95, g: 0.6, b: 0.85, a: 1}
+  maxHp: 1500
+  attack: 60
+  defense: 40
+  moveRange: 8
+  attackRange: 3
+  unlockStage: 3
+  color: {r: 1, g: 0.5, b: 0.2, a: 1}

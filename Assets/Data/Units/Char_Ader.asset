@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66661282b1f13e84da49b7ac1c773651, type: 3}
   m_Name: Char_Ader
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
-  displayName: "\uC5D0\uB354"
-  maxHp: 14
-  color: {r: 0.45, g: 0.4, b: 0.95, a: 1}
+  displayName: "\uC5D0\uB354 \uD0A4\uB9AC\uC2A4\uD154"
+  maxHp: 1100
+  attack: 35
+  defense: 30
+  moveRange: 5
+  attackRange: 5
+  unlockStage: 1
+  color: {r: 0.55, g: 0.4, b: 0.95, a: 1}

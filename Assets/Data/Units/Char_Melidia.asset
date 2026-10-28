@@ -10,8 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 66661282b1f13e84da49b7ac1c773651, type: 3}
-  m_Name: Enemy_Grunt
+  m_Name: Char_Melidia
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
-  displayName: Grunt
-  maxHp: 6
-  color: {r: 0.85, g: 0.25, b: 0.25, a: 1}
+  displayName: "\uBA5C\uB9AC\uB514\uC544"
+  maxHp: 1350
+  attack: 15
+  defense: 35
+  moveRange: 5
+  attackRange: 4
+  unlockStage: 2
+  color: {r: 0.95, g: 0.6, b: 0.85, a: 1}

@@ -13,5 +13,10 @@ MonoBehaviour:
   m_Name: Char_Clare
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
   displayName: "\uD074\uB808\uC5B4"
-  maxHp: 12
+  maxHp: 1500
+  attack: 40
+  defense: 45
+  moveRange: 7
+  attackRange: 4
+  unlockStage: 1
   color: {r: 0.25, g: 0.55, b: 0.95, a: 1}

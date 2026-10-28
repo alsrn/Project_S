@@ -17,6 +17,12 @@ namespace ProjectS.Combat
         public int Hp { get; private set; }
         public bool IsAlive => Hp > 0;
 
+        // 현재 능력치. TODO: 버프/디버프가 생기면 여기서 보정값을 합산한다.
+        public int Attack => Definition.Attack;
+        public int Defense => Definition.Defense;
+        public int MoveRange => Definition.MoveRange;
+        public int AttackRange => Definition.AttackRange;
+
         public bool IsOnGrid { get; private set; }
         public GridCoord Coord { get; private set; }
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ProjectS.Actions;
 using ProjectS.Combat;
 using ProjectS.UI;
 using UnityEngine;
@@ -14,21 +15,24 @@ namespace ProjectS.Core
     {
         [SerializeField] private StageDefinition stage;
         [SerializeField] private PrototypeRoster roster;
+        [SerializeField] private MoveDefinition moveDefinition;
         [SerializeField, Min(0.1f)] private float cellSize = 1f;
 
         private BattlefieldView view;
         private PrototypeHud hud;
         private DeploymentController deployment;
         private DeploymentScreen deploymentScreen;
+        private BattleController battle;
 
         public StagePhase Phase { get; private set; } = StagePhase.None;
         public Battlefield Battlefield { get; private set; }
 
         private void Start()
         {
-            if (stage == null || roster == null)
+            if (stage == null || roster == null || moveDefinition == null)
             {
-                Debug.LogError("[StageFlow] StageDefinition 또는 PrototypeRoster 가 지정되지 않았습니다.", this);
+                Debug.LogError("[StageFlow] StageDefinition / PrototypeRoster / MoveDefinition 참조가 비어 있습니다. " +
+                               "메뉴 Project S > Setup Stage1 Prototype 을 실행하세요.", this);
                 return;
             }
 
@@ -39,7 +43,7 @@ namespace ProjectS.Core
         private void EnterFormation()
         {
             SetPhase(StagePhase.Formation);
-            FormationScreen.Create(roster, EnterDeployment);
+            FormationScreen.Create(roster, stage, EnterDeployment);
         }
 
         /// <summary>스테이지 입장: 전장 생성(적 스폰) → 편성 결과로 아군 생성 → 배치 화면.</summary>
@@ -76,10 +80,17 @@ namespace ProjectS.Core
             Destroy(deploymentScreen.gameObject);
             deploymentScreen = null;
 
-            SetPhase(StagePhase.Battle);
-            hud.SetPhase("전투 단계 (턴·이동·카드는 단계 C~E 에서 구현)");
             foreach (var ally in deployment.Allies)
                 Debug.Log($"[StageFlow] Deployed {ally} at {ally.Coord}");
+
+            SetPhase(StagePhase.Battle);
+            hud.SetPhase("전투 - 유닛 클릭: 선택 / 빈 타일 클릭: 이동 / 우클릭·Esc: 선택 취소");
+            view.EnableMovementAnimation();
+
+            battle = BattleController.Create(Battlefield, moveDefinition);
+            var selection = SelectionController.Create(battle, view, hud);
+            BattlePanel.Create(battle, selection, hud);
+            battle.Begin();
         }
 
         private void SetPhase(StagePhase next)

@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66661282b1f13e84da49b7ac1c773651, type: 3}
   m_Name: Char_Katie
   m_EditorClassIdentifier: ProjectS::ProjectS.Combat.UnitDefinition
-  displayName: "\uCF00\uC774\uD2F0"
-  maxHp: 11
+  displayName: "\uCF00\uC774\uD2F0 \uD398\uC5B4\uD06C\uB85C\uC2A4"
+  maxHp: 900
+  attack: 75
+  defense: 25
+  moveRange: 4
+  attackRange: 6
+  unlockStage: 2
   color: {r: 0.95, g: 0.75, b: 0.2, a: 1}

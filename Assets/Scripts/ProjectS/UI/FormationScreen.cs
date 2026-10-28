@@ -15,16 +15,18 @@ namespace ProjectS.UI
     public sealed class FormationScreen : MonoBehaviour
     {
         private PrototypeRoster roster;
+        private StageDefinition stage;
         private Action<PartySelection> onConfirm;
         private readonly List<UnitDefinition> selected = new List<UnitDefinition>();
         private readonly Dictionary<UnitDefinition, Button> buttons = new Dictionary<UnitDefinition, Button>();
         private Text status;
 
-        public static FormationScreen Create(PrototypeRoster roster, Action<PartySelection> onConfirm)
+        public static FormationScreen Create(PrototypeRoster roster, StageDefinition stage, Action<PartySelection> onConfirm)
         {
             var canvas = UiFactory.CreateCanvas("FormationScreen", 10);
             var screen = canvas.gameObject.AddComponent<FormationScreen>();
             screen.roster = roster;
+            screen.stage = stage;
             screen.onConfirm = onConfirm;
             screen.Build(canvas.transform);
             return screen;
@@ -40,18 +42,19 @@ namespace ProjectS.UI
 
             var hint = UiFactory.CreateText(root, "Hint", new Vector2(0.5f, 1f), new Vector2(0f, -120f),
                 new Vector2(1200f, 40f), 24, TextAnchor.MiddleCenter);
-            hint.text = $"출격할 캐릭터를 선택하세요 (1~{roster.MaxPartySize}명).  덱 구성은 이후 단계에서 추가 예정";
+            hint.text = $"{stage.DisplayName} - 출격할 캐릭터를 선택하세요 (1~{stage.PartySize}명).  덱 구성은 이후 단계에서 추가 예정";
 
             const float buttonHeight = 60f;
-            const float spacing = 12f;
-            float startY = -190f;
+            const float spacing = 10f;
+            float startY = -180f;
             for (int i = 0; i < roster.Candidates.Count; i++)
             {
                 var def = roster.Candidates[i];
                 if (def == null) continue;
 
                 var button = UiFactory.CreateButton(root, def.DisplayName, new Vector2(0.5f, 1f),
-                    new Vector2(0f, startY - i * (buttonHeight + spacing)), new Vector2(420f, buttonHeight), () => Toggle(def));
+                    new Vector2(0f, startY - i * (buttonHeight + spacing)), new Vector2(760f, buttonHeight), () => Toggle(def));
+                button.interactable = PrototypeRoster.IsUnlocked(def, stage);
                 buttons[def] = button;
             }
 
@@ -71,9 +74,9 @@ namespace ProjectS.UI
                 return;
             }
 
-            if (selected.Count >= roster.MaxPartySize)
+            if (selected.Count >= stage.PartySize)
             {
-                Refresh($"최대 {roster.MaxPartySize}명까지 편성할 수 있습니다");
+                Refresh($"최대 {stage.PartySize}명까지 편성할 수 있습니다");
                 return;
             }
 
@@ -83,7 +86,7 @@ namespace ProjectS.UI
 
         private void Confirm()
         {
-            if (!roster.ValidateParty(selected, out var reason))
+            if (!roster.ValidateParty(selected, stage, out var reason))
             {
                 Refresh(reason);
                 return;
@@ -98,14 +101,19 @@ namespace ProjectS.UI
         {
             foreach (var pair in buttons)
             {
-                int order = selected.IndexOf(pair.Key);
+                var def = pair.Key;
+                int order = selected.IndexOf(def);
                 bool isSelected = order >= 0;
+                string stats = $"HP {def.MaxHp}  공 {def.Attack}  방 {def.Defense}  이동 {def.MoveRange}  사거리 {def.AttackRange}";
+                string label = !PrototypeRoster.IsUnlocked(def, stage)
+                    ? $"{def.DisplayName}   ({def.UnlockStage}스테이지 해금)"
+                    : $"{(isSelected ? $"{order + 1}. " : "")}{def.DisplayName}   {stats}";
                 UiFactory.SetButtonColor(pair.Value, isSelected ? PrototypeVisuals.ButtonSelected : PrototypeVisuals.ButtonNormal);
-                UiFactory.SetButtonLabel(pair.Value, isSelected ? $"{order + 1}. {pair.Key.DisplayName}" : pair.Key.DisplayName);
+                UiFactory.SetButtonLabel(pair.Value, label);
             }
 
             status.color = error != null ? new Color(1f, 0.5f, 0.4f) : Color.white;
-            status.text = error ?? $"선택 {selected.Count} / {roster.MaxPartySize}";
+            status.text = error ?? $"선택 {selected.Count} / {stage.PartySize}";
         }
     }
 }
