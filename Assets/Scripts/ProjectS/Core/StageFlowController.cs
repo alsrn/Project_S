@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using ProjectS.Combat;
 using ProjectS.UI;
 using UnityEngine;
 
@@ -5,36 +8,94 @@ namespace ProjectS.Core
 {
     /// <summary>
     /// 스테이지 진행 최상위 컨트롤러(씬 진입점). 편성 → 배치 → 전투 → 정산 흐름과 강제 종료를 담당한다.
-    /// 현재(단계 A): StageDefinition 으로 전장을 만들고 적 스폰을 표시·로그한다.
+    /// 단계별 세부 규칙은 각 담당 클래스(PrototypeRoster, DeploymentController, ...)에 위임하고 여기서는 전환만 한다.
     /// </summary>
     public sealed class StageFlowController : MonoBehaviour
     {
         [SerializeField] private StageDefinition stage;
+        [SerializeField] private PrototypeRoster roster;
         [SerializeField, Min(0.1f)] private float cellSize = 1f;
 
+        private BattlefieldView view;
+        private PrototypeHud hud;
+        private DeploymentController deployment;
+        private DeploymentScreen deploymentScreen;
+
+        public StagePhase Phase { get; private set; } = StagePhase.None;
         public Battlefield Battlefield { get; private set; }
 
         private void Start()
         {
-            if (stage == null)
+            if (stage == null || roster == null)
             {
-                Debug.LogError("[StageFlow] StageDefinition 이 지정되지 않았습니다.", this);
+                Debug.LogError("[StageFlow] StageDefinition 또는 PrototypeRoster 가 지정되지 않았습니다.", this);
                 return;
             }
 
+            UiFactory.EnsureEventSystem();
+            EnterFormation();
+        }
+
+        private void EnterFormation()
+        {
+            SetPhase(StagePhase.Formation);
+            FormationScreen.Create(roster, EnterDeployment);
+        }
+
+        /// <summary>스테이지 입장: 전장 생성(적 스폰) → 편성 결과로 아군 생성 → 배치 화면.</summary>
+        private void EnterDeployment(PartySelection party)
+        {
             Battlefield = Battlefield.Create(stage);
             LogSpawns();
 
-            var view = BattlefieldView.Create(Battlefield, cellSize);
-            var cam = Camera.main;
-            if (cam != null)
+            List<Unit> allies = party.Members.Select(def => Battlefield.Units.Create(def, Team.Player)).ToList();
+            Debug.Log($"[StageFlow] Party: {string.Join(", ", allies)}");
+
+            view = BattlefieldView.Create(Battlefield, cellSize);
+            FitCamera();
+            hud = PrototypeHud.Create(Battlefield, view);
+
+            deployment = new DeploymentController(Battlefield, allies);
+            deploymentScreen = DeploymentScreen.Create(deployment, Battlefield, view, hud, TryStartBattle);
+
+            SetPhase(StagePhase.Deployment);
+            hud.SetPhase("배치 단계 - 아군 전원을 배치하면 전투를 시작할 수 있습니다");
+        }
+
+        /// <summary>Start 버튼 요청. 버튼 활성 여부와 별개로 여기서 조건을 다시 확인한다.</summary>
+        private void TryStartBattle()
+        {
+            if (Phase != StagePhase.Deployment) return;
+
+            if (!deployment.IsComplete)
             {
-                if (!cam.TryGetComponent(out BattlefieldCamera camController))
-                    camController = cam.gameObject.AddComponent<BattlefieldCamera>();
-                camController.FitTo(view.WorldBounds);
+                hud.ShowMessage("아직 배치하지 않은 아군이 있습니다");
+                return;
             }
 
-            PrototypeHud.Create(Battlefield, view);
+            Destroy(deploymentScreen.gameObject);
+            deploymentScreen = null;
+
+            SetPhase(StagePhase.Battle);
+            hud.SetPhase("전투 단계 (턴·이동·카드는 단계 C~E 에서 구현)");
+            foreach (var ally in deployment.Allies)
+                Debug.Log($"[StageFlow] Deployed {ally} at {ally.Coord}");
+        }
+
+        private void SetPhase(StagePhase next)
+        {
+            Debug.Log($"[StageFlow] Phase {Phase} -> {next}");
+            Phase = next;
+        }
+
+        private void FitCamera()
+        {
+            var cam = Camera.main;
+            if (cam == null) return;
+
+            if (!cam.TryGetComponent(out BattlefieldCamera camController))
+                camController = cam.gameObject.AddComponent<BattlefieldCamera>();
+            camController.FitTo(view.WorldBounds);
         }
 
         private void LogSpawns()

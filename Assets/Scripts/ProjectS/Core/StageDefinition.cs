@@ -37,6 +37,8 @@ namespace ProjectS.Core
         public int Width => width;
         public int Height => height;
         public IReadOnlyList<EnemySpawn> EnemySpawns => enemySpawns;
+        public GridCoord DeploymentZoneMin => GridCoord.FromDesign(deploymentZoneMin);
+        public GridCoord DeploymentZoneMax => GridCoord.FromDesign(deploymentZoneMax);
 
         public bool IsInDeploymentZone(GridCoord c)
         {

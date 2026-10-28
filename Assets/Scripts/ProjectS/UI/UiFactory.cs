@@ -1,4 +1,7 @@
+using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace ProjectS.UI
@@ -29,9 +32,18 @@ namespace ProjectS.UI
             return canvas;
         }
 
-        /// <summary>anchor 지점을 기준으로 위치하는 텍스트. pivot 은 anchor 와 같게 둔다.</summary>
-        public static Text CreateText(Transform parent, string name, Vector2 anchor, Vector2 anchoredPosition,
-            Vector2 size, int fontSize, TextAnchor alignment)
+        /// <summary>uGUI 클릭에 필요한 EventSystem(Input System 용 모듈)이 없으면 만든다.</summary>
+        public static void EnsureEventSystem()
+        {
+            if (EventSystem.current != null) return;
+
+            var go = new GameObject("EventSystem");
+            go.AddComponent<EventSystem>();
+            go.AddComponent<InputSystemUIInputModule>();
+        }
+
+        /// <summary>anchor 지점을 기준으로 놓이는 RectTransform 오브젝트. pivot 은 anchor 와 같게 둔다.</summary>
+        public static RectTransform CreateRect(Transform parent, string name, Vector2 anchor, Vector2 anchoredPosition, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -42,7 +54,68 @@ namespace ProjectS.UI
             rt.pivot = anchor;
             rt.anchoredPosition = anchoredPosition;
             rt.sizeDelta = size;
+            return rt;
+        }
 
+        /// <summary>부모 전체를 덮는 단색 패널.</summary>
+        public static Image CreateFullscreenPanel(Transform parent, string name, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            var image = go.AddComponent<Image>();
+            image.color = color;
+            return image;
+        }
+
+        public static Image CreatePanel(Transform parent, string name, Vector2 anchor, Vector2 anchoredPosition, Vector2 size, Color color)
+        {
+            var image = CreateRect(parent, name, anchor, anchoredPosition, size).gameObject.AddComponent<Image>();
+            image.color = color;
+            return image;
+        }
+
+        public static Button CreateButton(Transform parent, string label, Vector2 anchor, Vector2 anchoredPosition,
+            Vector2 size, Action onClick)
+        {
+            var rt = CreateRect(parent, $"Button_{label}", anchor, anchoredPosition, size);
+            var image = rt.gameObject.AddComponent<Image>();
+            image.color = Color.white;
+
+            var button = rt.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            SetButtonColor(button, PrototypeVisuals.ButtonNormal);
+            button.onClick.AddListener(() => onClick());
+
+            var text = CreateText(rt, "Label", new Vector2(0.5f, 0.5f), Vector2.zero, size, 24, TextAnchor.MiddleCenter);
+            text.text = label;
+            return button;
+        }
+
+        public static void SetButtonLabel(Button button, string label) => button.GetComponentInChildren<Text>().text = label;
+
+        /// <summary>버튼 기본색. 비활성 시에는 어둡게 보인다.</summary>
+        public static void SetButtonColor(Button button, Color normal)
+        {
+            var colors = button.colors;
+            colors.normalColor = normal;
+            colors.highlightedColor = Color.Lerp(normal, Color.white, 0.2f);
+            colors.pressedColor = Color.Lerp(normal, Color.black, 0.2f);
+            colors.selectedColor = normal;
+            colors.disabledColor = new Color(0.18f, 0.18f, 0.2f, 0.8f);
+            button.colors = colors;
+        }
+
+        /// <summary>anchor 지점을 기준으로 위치하는 텍스트. pivot 은 anchor 와 같게 둔다.</summary>
+        public static Text CreateText(Transform parent, string name, Vector2 anchor, Vector2 anchoredPosition,
+            Vector2 size, int fontSize, TextAnchor alignment)
+        {
+            var go = CreateRect(parent, name, anchor, anchoredPosition, size).gameObject;
             var text = go.AddComponent<Text>();
             text.font = Font;
             text.fontSize = fontSize;

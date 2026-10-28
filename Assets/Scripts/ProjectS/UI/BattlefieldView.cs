@@ -14,6 +14,7 @@ namespace ProjectS.UI
     {
         private Battlefield battlefield;
         private SpriteRenderer[,] tiles;
+        private SpriteRenderer[,] overlays;
         private readonly Dictionary<int, UnitView> unitViews = new Dictionary<int, UnitView>();
 
         public float CellSize { get; private set; }
@@ -50,10 +51,29 @@ namespace ProjectS.UI
             }
         }
 
+        /// <summary>모든 타일 하이라이트를 끈다.</summary>
+        public void ClearHighlights()
+        {
+            foreach (var o in overlays) o.enabled = false;
+        }
+
+        /// <summary>지정 타일에 하이라이트를 덧칠한다(나중 호출이 덮어씀). 판정은 호출자가 이미 끝낸 결과만 받는다.</summary>
+        public void AddHighlights(IEnumerable<GridCoord> coords, Color color)
+        {
+            foreach (var c in coords)
+            {
+                if (!battlefield.Grid.IsInside(c)) continue;
+                var o = overlays[c.X, c.Y];
+                o.color = color;
+                o.enabled = true;
+            }
+        }
+
         private void BuildTiles()
         {
             var grid = battlefield.Grid;
             tiles = new SpriteRenderer[grid.Width, grid.Height];
+            overlays = new SpriteRenderer[grid.Width, grid.Height];
             var root = new GameObject("Tiles").transform;
             root.SetParent(transform, false);
 
@@ -64,6 +84,12 @@ namespace ProjectS.UI
                 // 칸 사이 틈으로 격자선을 표현
                 sr.transform.localScale = new Vector3(CellSize * 0.95f, CellSize * 0.95f, 1f);
                 tiles[c.X, c.Y] = sr;
+
+                var overlay = PrototypeVisuals.CreateSquare($"Highlight_{c}", root, Color.clear, PrototypeVisuals.HighlightOrder);
+                overlay.transform.position = CoordToWorld(c);
+                overlay.transform.localScale = sr.transform.localScale;
+                overlay.enabled = false;
+                overlays[c.X, c.Y] = overlay;
             }
         }
 
