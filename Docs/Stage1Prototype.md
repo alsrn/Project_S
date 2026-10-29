@@ -9,7 +9,7 @@
 
 | 영역 | 내용 |
 |---|---|
-| 씬 | `Assets/Scenes/Stage1Prototype.unity` (빌드 설정 0번). 카메라와 `StageFlow` 오브젝트만 있고 나머지는 런타임 생성 |
+| 씬 | `Assets/Scenes/Title.unity` (빌드 0번, 타이틀) → `Assets/Scenes/Stage1Prototype.unity` (빌드 1번, 코어 루프). 각각 카메라와 진입점 오브젝트(`TitleFlow` / `StageFlow`)만 있고 나머지는 런타임 생성 |
 | 코드 | `Assets/Scripts/ProjectS/` (어셈블리 `ProjectS`). 기존 `Assets/Scripts/GridManager.cs`, `PlayerMover.cs` 는 수정하지 않음 |
 | 데이터 | `Assets/Data/` — Stages, Units(캐릭터 7·랩터·Roster), Cards(평타 7 + 랩터 능력), Actions(이동), Rules(전투 규칙), Presentation |
 | 아트 | `Assets/Art/` (ArtSources 를 영문 이름으로 복사), 프리팹 `Assets/Prefabs/TileView.prefab`, `UnitView.prefab` |
@@ -18,7 +18,10 @@
 
 ## 2. 실행 방법
 
-- Unity **6000.3.24f1**, `Assets/Scenes/Stage1Prototype.unity` 를 열고 Play.
+- Unity **6000.3.24f1**, `Assets/Scenes/Title.unity` 를 열고 Play (스테이지만 시험할 때는 `Stage1Prototype.unity` 를 바로 Play 해도 된다).
+- 타이틀: 마우스 호버/클릭 또는 ↑↓(W/S) + Enter/Space. 게임시작 → 편성부터 코어 루프, 게임종료 → 종료. 불러오기·옵션은 "준비 중" 안내만(PROTOTYPE).
+  배치는 원본 PSD(`ArtSources/1 title/타이틀화면 - 작업파일.psd`) 레이어 좌표를 그대로 사용(`TitleScreen`). 로고 `Assets/Art/Title/Logo.png` 는 PSD 의 표시 중 로고 레이어를 추출한 파일.
+- 결과 화면: 다시 시작(스테이지 재시작) / 타이틀로.
 - 편성: 1스테이지 해금 캐릭터(클레어·리안·에더) 중 1~3명 선택 → 출격. 덱은 출격 캐릭터의 평타 카드 1장씩.
 - 배치: 오른쪽 목록에서 아군 선택 → 파란 구역 클릭. 배치된 아군 클릭 = 재선택, 우클릭 = 해제. 전원 배치 시 "전투 시작" 활성.
 - 전투:

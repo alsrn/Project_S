@@ -55,7 +55,19 @@ namespace ProjectS.EditorTools
             ("tile_steel.png", "Tiles/Steel.png", ArtKind.Tile),
             ("4 battle victory/victory.png", "UI/Victory.png", ArtKind.Ui),
             ("5 battle/turn_end.png", "UI/TurnEnd.png", ArtKind.Ui),
+            ("1 title/background/background.png", "Title/Background.png", ArtKind.Ui),
+            ("1 title/background/spaceship.png", "Title/Spaceship.png", ArtKind.Ui),
+            ("1 title/text/start.png", "Title/Menu_Start.png", ArtKind.Ui),
+            ("1 title/text/load.png", "Title/Menu_Load.png", ArtKind.Ui),
+            ("1 title/text/option.png", "Title/Menu_Option.png", ArtKind.Ui),
+            ("1 title/text/exit.png", "Title/Menu_Exit.png", ArtKind.Ui),
+            // 원본 없음(null): PSD '타이틀화면 - 작업파일.psd' 의 표시 중인 로고 레이어(벡터 스마트 오브젝트, 551x102)를
+            // 추출해 저장소에 직접 넣은 파일. 임포트 설정만 맞춘다. (폴더의 title_text.png 는 PSD 에서 숨겨진 이전 버전)
+            (null, "Title/Logo.png", ArtKind.Ui),
         };
+
+        public const string TitleConfigPath = "Assets/Data/Presentation/TitleConfig.asset";
+        public const string TitleScenePath = "Assets/Scenes/Title.unity";
 
         /// <summary>캐릭터 Id → 정면 스프라이트 파일(Assets/Art/Units)</summary>
         private static readonly Dictionary<string, string> CharacterSprites = new Dictionary<string, string>
@@ -83,6 +95,51 @@ namespace ProjectS.EditorTools
             });
         }
 
+        private static TitleConfig SetupTitleConfig()
+        {
+            EnsureFolder(Path.GetDirectoryName(TitleConfigPath).Replace('\\', '/'));
+            return LoadOrCreate<TitleConfig>(TitleConfigPath, so =>
+            {
+                so.FindProperty("background").objectReferenceValue = LoadSprite("Title/Background");
+                so.FindProperty("spaceship").objectReferenceValue = LoadSprite("Title/Spaceship");
+                so.FindProperty("logo").objectReferenceValue = LoadSprite("Title/Logo");
+                so.FindProperty("menuStart").objectReferenceValue = LoadSprite("Title/Menu_Start");
+                so.FindProperty("menuLoad").objectReferenceValue = LoadSprite("Title/Menu_Load");
+                so.FindProperty("menuOption").objectReferenceValue = LoadSprite("Title/Menu_Option");
+                so.FindProperty("menuExit").objectReferenceValue = LoadSprite("Title/Menu_Exit");
+            });
+        }
+
+        /// <summary>타이틀 씬이 없으면 만들고, 있으면 비어 있는 참조만 채운다.</summary>
+        private static void EnsureTitleScene(TitleConfig config)
+        {
+            bool exists = File.Exists(TitleScenePath);
+            var scene = exists
+                ? UnityEditor.SceneManagement.EditorSceneManager.OpenScene(TitleScenePath, UnityEditor.SceneManagement.OpenSceneMode.Single)
+                : UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,
+                    UnityEditor.SceneManagement.NewSceneMode.Single);
+
+            if (!exists)
+            {
+                var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+                var cam = camGo.AddComponent<Camera>();
+                cam.orthographic = true;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = Color.black;
+                camGo.AddComponent<AudioListener>();
+                camGo.transform.position = new Vector3(0f, 0f, -10f);
+                new GameObject("TitleFlow").AddComponent<ProjectS.Core.TitleFlowController>();
+            }
+
+            var flow = Object.FindFirstObjectByType<ProjectS.Core.TitleFlowController>();
+            var so = new SerializedObject(flow);
+            AssignIfEmpty(so, "config", config);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene, TitleScenePath);
+            Debug.Log($"[PrototypeSetup] {(exists ? "Updated" : "Created")} {TitleScenePath}");
+        }
+
         // ---------------- 아트 복사 / 임포트 ----------------
 
         private static void ImportArtSources()
@@ -96,6 +153,7 @@ namespace ProjectS.EditorTools
                 string assetPath = $"{ArtFolder}/{target}";
                 if (!File.Exists(assetPath))
                 {
+                    if (source == null) continue;
                     string src = Path.Combine(sourceRoot, source);
                     if (!hasSource || !File.Exists(src)) continue;
 

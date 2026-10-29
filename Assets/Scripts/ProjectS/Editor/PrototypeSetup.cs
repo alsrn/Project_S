@@ -161,7 +161,8 @@ namespace ProjectS.EditorTools
             });
 
             EnsureScene(stage, roster, move, rules, presentation);
-            AddSceneToBuildSettingsFirst();
+            EnsureTitleScene(SetupTitleConfig());
+            PutScenesFirstInBuildSettings(TitleScenePath, ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("[PrototypeSetup] Done");
         }
@@ -270,11 +271,11 @@ namespace ProjectS.EditorTools
             if (p.objectReferenceValue == null) p.objectReferenceValue = value;
         }
 
-        private static void AddSceneToBuildSettingsFirst()
+        /// <summary>지정 씬들을 이 순서로 빌드 설정 맨 앞에(활성) 둔다. 나머지 씬의 순서·활성 여부는 유지.</summary>
+        private static void PutScenesFirstInBuildSettings(params string[] paths)
         {
-            var scenes = EditorBuildSettings.scenes.Where(s => s.path != ScenePath).ToList();
-            scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
+            var others = EditorBuildSettings.scenes.Where(s => !paths.Contains(s.path));
+            EditorBuildSettings.scenes = paths.Select(p => new EditorBuildSettingsScene(p, true)).Concat(others).ToArray();
         }
 
         private static void EnsureFolder(string path)

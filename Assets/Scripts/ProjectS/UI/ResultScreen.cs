@@ -6,12 +6,12 @@ using UnityEngine.UI;
 namespace ProjectS.UI
 {
     /// <summary>
-    /// 정산(결과) 화면: 승리 / 패배 / 나가기를 구분해 표시하고, 다시 시작·종료만 제공한다.
+    /// 정산(결과) 화면: 승리 / 패배 / 나가기를 구분해 표시하고, 다시 시작·타이틀로 이동만 제공한다.
     /// PROTOTYPE: 보상·진행도 저장·스테이지 선택 복귀는 미정이라 구현하지 않음.
     /// </summary>
     public sealed class ResultScreen : MonoBehaviour
     {
-        public static ResultScreen Create(StageResult result, PresentationConfig config, Action onRestart, Action onQuit)
+        public static ResultScreen Create(StageResult result, PresentationConfig config, Action onRestart, Action onTitle)
         {
             var canvas = UiFactory.CreateCanvas("ResultScreen", 20);
             var screen = canvas.gameObject.AddComponent<ResultScreen>();
@@ -40,7 +40,7 @@ namespace ProjectS.UI
             detail.text = $"{result.Reason}\n진행 턴: {result.TurnNumber}";
 
             UiFactory.CreateButton(t, "다시 시작", new Vector2(0.5f, 0.5f), new Vector2(-170f, -180f), new Vector2(300f, 80f), onRestart);
-            UiFactory.CreateButton(t, "종료", new Vector2(0.5f, 0.5f), new Vector2(170f, -180f), new Vector2(300f, 80f), onQuit);
+            UiFactory.CreateButton(t, "타이틀로", new Vector2(0.5f, 0.5f), new Vector2(170f, -180f), new Vector2(300f, 80f), onTitle);
             return screen;
         }
 

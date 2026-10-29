@@ -126,19 +126,12 @@ namespace ProjectS.Core
             view.ClearHighlights();
 
             hud.SetPhase($"결과: {result.Outcome}");
-            ResultScreen.Create(result, presentation, Restart, Quit);
+            ResultScreen.Create(result, presentation, Restart, ReturnToTitle);
         }
 
-        private static void Restart() => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        private static void Restart() => SceneManager.LoadScene(SceneNames.Stage1);
 
-        private static void Quit()
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
+        private static void ReturnToTitle() => SceneManager.LoadScene(SceneNames.Title);
 
         private void SetPhase(StagePhase next)
         {
