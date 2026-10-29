@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46be67df0e395944fbee2862e9333847, type: 3}
+  m_Name: Card_Ader_Serum
+  m_EditorClassIdentifier: ProjectS::ProjectS.Actions.CardDefinition
+  displayName: "\uD608\uCCAD \uD22C\uC5EC"
+  baseCost: 4
+  description: "\uC544\uAD70 \uCE90\uB9AD\uD130\uC5D0\uAC8C \uC0AC\uC6A9\uD560 \uC218
+    \uC788\uB2E4. \uACF5\uACA9\uB825\uACFC \uBC29\uC5B4\uB825\uC774 \uC0C1\uC2B9\uD558\uBA70(\uACF5\uACA9\uB825
+    + 40, \uBC29\uC5B4\uB825 + 25, \uC9C0\uC18D\uC2DC\uAC04 2\uD134) \uAC00\uD558\uB294
+    \uD53C\uD574\uAC00 50% \uC0C1\uC2B9\uD55C\uB2E4(\uC9C0\uC18D\uC2DC\uAC04 2\uD134).
+    \uCD94\uAC00\uB85C \uCCB4\uB825\uC744 \uD68C\uBCF5\uC2DC\uCF1C\uC900\uB2E4(+400)"
+  targetRequirements:
+  - kind: 0
+    relation: 1
+    requireAlive: 1
+    rangeSource: 0
+    fixedRange: 0
+    requireLineOfSight: 0
+  effects:
+  - rid: 1476500743640580106
+  - rid: 1476500743640580107
+  executeSeconds: 1.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 1476500743640580106
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 0
+        targetIndex: 0
+        label: "\uD608\uCCAD"
+        isDebuff: 0
+        durationRounds: 2
+        modifiers:
+          attackAdd: 40
+          defenseAdd: 25
+          defenseMultiplier: 1
+          moveRangeAdd: 0
+          damageDealtMultiplier: 1.5
+          damageTakenMultiplier: 1
+    - rid: 1476500743640580107
+      type: {class: HealEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 0
+        targetIndex: 0
+        flatAmount: 400
+        percentOfMaxHp: 0
+        percentOfCurrentHp: 0

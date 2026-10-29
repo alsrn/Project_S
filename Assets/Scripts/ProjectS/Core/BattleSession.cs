@@ -11,7 +11,8 @@ namespace ProjectS.Core
     /// 전투 1회분 시스템 생성·연결(순수 C#, 테스트에서 그대로 사용 가능).
     /// - 플레이어 요청: Commands / 순서·실행: Scheduler / 턴: Turns / 비용: Resources / 덱: Deck / 판정: Context.Targets
     /// - 적 턴: EnemyTurn (같은 Action 실행 체계)
-    /// - 턴 이벤트 연결: 턴 시작 → 이동 횟수 초기화, 플레이어 턴 시작 → 드로우, 플레이어 턴 종료 → 손패 버림(STS 방식)
+    /// - 턴 이벤트 연결: 턴 시작 → 이동 횟수 초기화, 플레이어 턴 시작 → 드로우, 플레이어 턴 종료 → 손패 버림(STS 방식),
+    ///   적 턴 종료(= 라운드 종료) → 상태 효과 지속 감소
     /// - 종료 판정: 유닛 사망 시 / 플레이어 턴 종료 시(턴 제한) StageRuleEvaluator 로 확인 → End()
     /// 프레임 진행은 BattleController 가 Tick(dt) 로 한다.
     /// </summary>
@@ -81,6 +82,7 @@ namespace ProjectS.Core
         private void OnTurnEnded(Team team, int turn)
         {
             if (team == Team.Player) Deck.DiscardHand();
+            else if (team == Team.Enemy) Context.Combat.EndRound(Context.Units.All); // 라운드 종료: 상태 효과 지속 감소
 
             if (StageRuleEvaluator.IsTurnLimitReached(Context.Battlefield.Stage, team, turn))
                 End(StageOutcome.Defeat, $"턴 제한 초과 ({Context.Battlefield.Stage.TurnLimit}턴 이내 클리어 실패)");

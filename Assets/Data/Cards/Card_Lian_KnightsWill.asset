@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46be67df0e395944fbee2862e9333847, type: 3}
+  m_Name: Card_Lian_KnightsWill
+  m_EditorClassIdentifier: ProjectS::ProjectS.Actions.CardDefinition
+  displayName: "\uAE30\uC0AC\uC758 \uC758\uC9C0"
+  baseCost: 4
+  description: "\uCD5C\uB300 \uCCB4\uB825\uC758 80%\uB97C \uC989\uC2DC \uD68C\uBCF5\uD55C\uB2E4.
+    \uACF5\uACA9\uB825 \uBC0F \uBC29\uC5B4\uB825\uC774 \uB300\uD3ED \uC0C1\uC2B9\uD558\uBA70(\uACF5\uACA9\uB825
+    + 60, \uBC29\uC5B4\uB825 +30, \uC9C0\uC18D\uC2DC\uAC04 2\uD134) \uC790\uC2E0\uC5D0\uAC8C
+    \uAC78\uB9B0 \uBAA8\uB4E0 \uB514\uBC84\uD504 \uD6A8\uACFC\uB97C \uC81C\uAC70\uD55C\uB2E4.
+    \uCD94\uAC00\uB85C \uC774\uB3D9\uC18D\uB3C4\uB3C4 \uC99D\uAC00\uD55C\uB2E4(5x5,
+    \uC9C0\uC18D\uC2DC\uAC04 1\uD134)"
+  targetRequirements: []
+  effects:
+  - rid: 1476500743640580101
+  - rid: 1476500743640580102
+  - rid: 1476500743640580103
+  - rid: 1476500743640580104
+  executeSeconds: 1.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 1476500743640580101
+      type: {class: HealEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        flatAmount: 0
+        percentOfMaxHp: 0.8
+        percentOfCurrentHp: 0
+    - rid: 1476500743640580102
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        label: "\uAE30\uC0AC\uC758 \uC758\uC9C0"
+        isDebuff: 0
+        durationRounds: 2
+        modifiers:
+          attackAdd: 60
+          defenseAdd: 30
+          defenseMultiplier: 1
+          moveRangeAdd: 0
+          damageDealtMultiplier: 1
+          damageTakenMultiplier: 1
+    - rid: 1476500743640580103
+      type: {class: RemoveDebuffsEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        maxCount: 0
+    - rid: 1476500743640580104
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        label: "\uAE30\uC0AC\uC758 \uC758\uC9C0(\uC774\uB3D9)"
+        isDebuff: 0
+        durationRounds: 1
+        modifiers:
+          attackAdd: 0
+          defenseAdd: 0
+          defenseMultiplier: 1
+          moveRangeAdd: 1
+          damageDealtMultiplier: 1
+          damageTakenMultiplier: 1

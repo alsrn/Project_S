@@ -25,13 +25,33 @@ namespace ProjectS.Actions
 
         public override WhileExecutingPolicy WhileExecuting => WhileExecutingPolicy.QueueNewRequests;
 
+        /// <summary>UI 표시용 효과 요약(데이터에서 자동 생성).</summary>
+        public string DescribeEffects()
+        {
+            var parts = new List<string>();
+            foreach (var e in effects)
+                if (e != null) parts.Add((e.target == EffectTarget.Self ? "자신: " : "") + e.Describe());
+            return string.Join(" / ", parts);
+        }
+
 #if UNITY_EDITOR
         // 인스펙터에서 [SerializeReference] 효과를 추가하기 위한 메뉴(컴포넌트 ⋮ 메뉴)
         [ContextMenu("Add Damage Effect")]
-        private void AddDamageEffect()
+        private void AddDamageEffect() => AddEffect(new DamageEffect());
+
+        [ContextMenu("Add Heal Effect")]
+        private void AddHealEffect() => AddEffect(new HealEffect());
+
+        [ContextMenu("Add Status Effect (Buff or Debuff)")]
+        private void AddStatusEffect() => AddEffect(new ApplyStatusEffect());
+
+        [ContextMenu("Add Remove Debuffs Effect")]
+        private void AddRemoveDebuffsEffect() => AddEffect(new RemoveDebuffsEffect());
+
+        private void AddEffect(CardEffect effect)
         {
-            UnityEditor.Undo.RecordObject(this, "Add Damage Effect");
-            effects.Add(new DamageEffect());
+            UnityEditor.Undo.RecordObject(this, "Add Card Effect");
+            effects.Add(effect);
             UnityEditor.EditorUtility.SetDirty(this);
         }
 #endif

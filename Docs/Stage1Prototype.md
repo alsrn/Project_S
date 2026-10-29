@@ -94,10 +94,26 @@ HandPanel 카드 클릭 → SelectionController.BeginCard (대상 지정 모드,
 1. Project 창 `Assets/Data/Cards` 에서 **Create > Project S > Card Definition**.
 2. `Display Name`, `Base Cost`(SP), `Description`, `Execute Seconds`(연출 시간) 입력.
 3. `Target Requirements` 에 항목 추가 (예: 적 1명 = Kind `Unit`, Relation `Enemy`, Require Alive 체크, Range Source `ActorAttackRange` 또는 `Fixed`+Fixed Range / `Unlimited`). 0개면 대상 선택 없이 바로 사용.
-4. 인스펙터 우측 ⋮ 메뉴 > **Add Damage Effect** → `Attack Multiplier`(현재 공격력 배율), `Flat Damage`(고정 피해), `Ignore Defense`.
-5. 캐릭터 `Assets/Data/Units/Char_*.asset` 의 `Cards` 목록에 추가하면 편성 시 덱에 들어간다.
+4. 인스펙터 우측 ⋮ 메뉴에서 효과 추가(목록 순서대로 적용). 각 효과의 `Target` = `ChosenTarget`(고른 대상) 또는 `Self`(사용자).
+   - **Add Damage Effect**: `Attack Multiplier`(현재 공격력 배율), `Flat Damage`(고정 피해), `Ignore Defense`
+   - **Add Heal Effect**: 고정량 / 최대 체력 % / 현재 체력 %
+   - **Add Status Effect**: 라벨, 디버프 여부, 지속 턴, 보정(공격 +, 방어 +, 방어 ×, 이동 +, 가하는 피해 ×, 받는 피해 ×)
+   - **Add Remove Debuffs Effect**: 디버프 해제(개수, 0 = 전부)
+5. 캐릭터 `Assets/Data/Units/Char_*.asset` 의 `Cards` 목록에 추가하면 편성 시 덱에 들어간다(첫 카드는 평타로 유지 — 적 AI·밸런스 테스트가 사용). 공용 카드는 `PrototypeRoster.asset` 의 `Common Cards`.
 
-새 효과 종류(회복, 버프 등)가 필요하면 `Actions/CardEffect.cs` 에 `CardEffect` 하위 클래스를 하나 추가하고(카드별 클래스 X), `CardDefinition` 의 ContextMenu 에 추가 메뉴를 만든다.
+예: 살육 = [Status(Self, 공+70, 2턴)] → [Damage ×5]. 맹독탄 = [Status(Chosen, 디버프, 방×0.5, 받는피해×2, 1턴)].
+새 효과 종류가 필요하면 `Actions/CardEffect.cs` 에 `CardEffect` 하위 클래스를 하나 추가하고(카드별 클래스 X), `CardDefinition` 의 ContextMenu 에 추가 메뉴를 만든다.
+
+### 구현된 카드 (출처: 카드 디자인 시트)
+
+| 캐릭터 | 카드 |
+|---|---|
+| 클레어 | 회전 베기(평타), 내려 찍기, 살육 |
+| 리안 | 휘두르기(평타), 방패 활성화, 기사의 의지 |
+| 에더 | 혈탄 발사(평타), 맹독탄, 혈청 투여 |
+| 공용 | 지원 사격 |
+| 2스테이지 이후 캐릭터 | 평타만 |
+| 미구현 | 광역(포격, 치유의 노래, 치유파동), 대상 없음(sp 회복, 추가 지원), 카드 셔플류(케이티), 화상 지속 피해(니카), 연사(카노) |
 
 ## 5. 아트 교체
 
@@ -120,7 +136,14 @@ HandPanel 카드 클릭 → SelectionController.BeginCard (대상 지정 모드,
 | 테스트 배율 | 최종 피해 ×15 (기획 수치로는 10턴 클리어 불가) | `BattleRules.asset` `Debug Damage Multiplier` |
 | 평타 배율 | 휘두르기 ×1→×3, 혈탄 발사 ×1→×2.2 (×15 기준 평타 675~750, 두 명이면 랩터 처치) | `Card_Lian_Swing`, `Card_Ader_BloodShot` |
 | 덱 | Slay the Spire 방식: 턴 시작 5장 드로우, 턴 종료 손패 버림, 빈 덱은 버린 더미 셔플 — 기획 협의 | `BattleRules.asset`, `DeckSystem` |
-| 덱 구성 | 출격 캐릭터 평타 카드 각 1장. 스킬·궁극기·공용 카드와 선택 UI 미구현 | `PartySelection.WithCharacterCards` |
+| 덱 구성 | 출격 캐릭터 카드 각 1장 + 공용 카드 각 1장 자동(3명이면 10장). 덱 선택 UI 미구현 | `PartySelection.WithCharacterCards`, `PrototypeRoster.commonCards` |
+| 드로우 | 턴당 4장(기획 협의 3~4장) — 10장 덱이 2~3턴마다 순환 | `BattleRules.asset` `Draw Per Turn` |
+| 상태 효과 지속 | 기획 'N턴' = N 라운드. 적 턴 종료 시 1 감소. 플레이어 턴에 건 '1턴' = 그 턴 + 이어지는 적 턴 | `StatusEffect`, `CombatService.EndRound` |
+| 상태 효과 중첩 | 같은 효과도 별개로 중첩 | `ApplyStatusEffect` |
+| 방패 활성화 지속 | 기획 미기재 → 1턴 | `Card_Lian_ShieldUp` |
+| 혈청 투여 사거리 | 기획 미기재 → 에더 공격 범위(5), 자신 포함 아군 | `Card_Ader_Serum` |
+| 기사의 의지 이동 | '5x5' → 리안 이동 4 → 5 (+1) | `Card_Lian_KnightsWill` |
+| 테스트 배율 적용 범위 | 피해에만 ×15, 회복·버프 수치에는 미적용 | `BattleRules.CalculateDamage` |
 | 카드 사용 상태 | 확정 시 손패→버림, 재검증 실패 시 손패 복원 | `DeckSystem.OnCardCommitted/Aborted` |
 | 대상 추적 | Unit 은 ID, Tile 은 좌표를 기억하고 실행 시점에 재조회 | `TargetRef` |
 | 출격 인원 | 1명 이상 스테이지 값(3) 이하 | `StageDefinition.partySize` |
@@ -164,8 +187,8 @@ HandPanel 카드 클릭 → SelectionController.BeginCard (대상 지정 모드,
 
 - **밸런스**: GDD 수치 + 단순 차감이면 리안(공 25)·에더(공 35)가 랩터(방 30)에 거의 피해를 못 주고, 랩터(공 40)는 클레어(방 45)·리안(방 60)에 최소 피해만 준다. 지금은 테스트 배율 ×15와 평타 배율 조정으로 플레이 가능하게만 맞춘 상태 — 피해 공식/수치는 기획 결정 필요.
 - **적 위협 부족**: 위 이유로 아군 전멸 패배는 거의 일어나지 않고, 패배는 주로 턴 제한으로 발생.
-- **덱 규모**: 덱이 3장이라 매 턴 손패가 덱 전체. 스킬/궁극기/공용 카드가 들어오면 STS 방식의 의미가 생김.
+- **스킬 카드 밸런스**: 테스트 배율 ×15 에서 내려 찍기(방어 무시 120 → 1800)는 랩터를 한 장으로 처치, 살육·맹독탄 조합은 과도하게 강함. 회복(혈청 +400 등)은 배율을 받지 않아 상대적으로 약함 — 피해 공식 결정 후 재조정 필요.
 - **미구현 P1**: 카메라 팬/줌, 카드 사용 연출(투사체·이펙트), 피해 숫자 팝업, 유닛 정보 패널 아트(`5 battle/chr_info.png` 등).
-- **미구현 P2**: 버프/디버프·지속 효과, 광역·타일 대상 효과(`DamageEffect` 는 유닛 대상만), 시야/LOS(켜면 '미지원'으로 실패), 맵 기믹, 2·3스테이지, 대상 추적 정책(§3.5).
+- **미구현 P2**: 광역·타일 대상 효과(효과는 유닛 대상만), 상태 효과 아이콘(지금은 왼쪽 정보 패널에 글자로만 표시), 시야/LOS(켜면 '미지원'으로 실패), 맵 기믹, 2·3스테이지, 대상 추적 정책(§3.5).
 - **에디터 배치 모드 부작용**: 명령줄로 Unity 를 실행하면 패키지가 `ProjectSettings.asset` 의 `SENTIS_ANALYTICS_ENABLED` 정의를 지운다 — 커밋하지 말 것.
 - **팀원 검토 필요**: 턴 제한 패배 시점(플레이어 턴 10 종료 vs 적 턴 10 종료), 동시 전멸 시 판정, 재검증 실패 시 카드 손패 복원 정책, 이동 비용(거리 무관 1).

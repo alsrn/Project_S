@@ -21,6 +21,7 @@ namespace ProjectS.UI
     {
         private static readonly Color CardTargetColor = new Color(1f, 0.15f, 0.1f, 0.7f);
         private static readonly Color CardRangeColor = new Color(1f, 0.6f, 0.55f, 0.3f);
+        private static readonly Color AllyTargetColor = new Color(0.2f, 0.95f, 0.5f, 0.7f);
         private static readonly Color ExecutingTargetColor = new Color(1f, 0.55f, 0f, 0.75f);
 
         private BattleController battle;
@@ -45,6 +46,8 @@ namespace ProjectS.UI
             battle.Deck.Changed += controller.OnDeckChanged;
             battle.Context.Combat.Damaged += controller.OnDamaged;
             battle.Context.Combat.Died += controller.OnDied;
+            battle.Context.Combat.Healed += controller.OnHealed;
+            battle.Context.Combat.StatusApplied += controller.OnStatusApplied;
             return controller;
         }
 
@@ -204,7 +207,8 @@ namespace ProjectS.UI
                 // 사거리 영역(옅게) → 그 위에 실제 지정 가능한 대상(진하게)
                 view.AddHighlights(battle.Context.Targets.GetRangeArea(CurrentRequirement, context), CardRangeColor);
                 var candidates = battle.Context.Targets.GetCandidates(CurrentRequirement, context);
-                view.AddHighlights(candidates.Select(ToCoord).Where(c => c.HasValue).Select(c => c.Value), CardTargetColor);
+                var candidateColor = CurrentRequirement.relation == TargetRelation.Ally ? AllyTargetColor : CardTargetColor;
+                view.AddHighlights(candidates.Select(ToCoord).Where(c => c.HasValue).Select(c => c.Value), candidateColor);
                 if (context.Actor != null && context.Actor.IsOnGrid)
                     view.AddHighlights(new[] { context.Actor.Coord }, PrototypeVisuals.HighlightSelected);
                 return;
@@ -250,6 +254,15 @@ namespace ProjectS.UI
 
         private void OnDied(Unit unit) => hud.ShowMessage($"{unit.DisplayName} 쓰러짐");
 
+        private void OnHealed(Unit unit, int amount) =>
+            hud.ShowMessage($"{unit.DisplayName}  +{amount} 회복  (HP {unit.Hp}/{unit.MaxHp})");
+
+        private void OnStatusApplied(Unit unit, StatusEffect status)
+        {
+            hud.ShowMessage($"{unit.DisplayName}  {(status.IsDebuff ? "디버프" : "버프")}: {status}");
+            highlightDirty = true; // 이동 범위 변화 반영
+        }
+
         private void OnTurnStarted(Team team, int turn) => highlightDirty = true;
 
         private void OnDeckChanged() => highlightDirty = true;
@@ -263,6 +276,8 @@ namespace ProjectS.UI
             battle.Deck.Changed -= OnDeckChanged;
             battle.Context.Combat.Damaged -= OnDamaged;
             battle.Context.Combat.Died -= OnDied;
+            battle.Context.Combat.Healed -= OnHealed;
+            battle.Context.Combat.StatusApplied -= OnStatusApplied;
             if (view != null) view.ClearHighlights();
         }
     }

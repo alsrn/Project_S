@@ -57,12 +57,13 @@ namespace ProjectS.Tests
             for (int i = 0; i < allies.Count; i++)
                 battlefield.Grid.Place(allies[i], GridCoord.FromDesign(i + 1, 18));
 
-            var party = PartySelection.WithCharacterCards(allies.Select(a => a.Definition));
+            var roster = AssetDatabase.LoadAssetAtPath<PrototypeRoster>(PrototypeSetup.RosterPath);
+            var rules = AssetDatabase.LoadAssetAtPath<BattleRules>(PrototypeSetup.RulesPath);
+            var party = PartySelection.WithCharacterCards(allies.Select(a => a.Definition), roster.CommonCards);
             var session = new BattleSession(battlefield,
-                AssetDatabase.LoadAssetAtPath<MoveDefinition>(PrototypeSetup.MovePath),
-                AssetDatabase.LoadAssetAtPath<BattleRules>(PrototypeSetup.RulesPath), party.Deck);
+                AssetDatabase.LoadAssetAtPath<MoveDefinition>(PrototypeSetup.MovePath), rules, party.Deck);
             session.Begin();
-            Assert.AreEqual(3, session.Deck.Hand.Count);
+            Assert.AreEqual(rules.DrawPerTurn, session.Deck.Hand.Count, "실제 손패 수로 배치 검사");
 
             var battle = BattleController.Create(session);
             var selection = SelectionController.Create(battle, view, hud);

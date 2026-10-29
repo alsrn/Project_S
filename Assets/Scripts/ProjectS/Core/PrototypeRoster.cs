@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ProjectS.Actions;
 using ProjectS.Combat;
 using UnityEngine;
 
@@ -14,7 +15,11 @@ namespace ProjectS.Core
     {
         [SerializeField] private List<UnitDefinition> candidates = new List<UnitDefinition>();
 
+        [Tooltip("PROTOTYPE: 덱에 자동으로 1장씩 들어가는 공용 카드(공용 카드 선택 UI 미구현)")]
+        [SerializeField] private List<CardDefinition> commonCards = new List<CardDefinition>();
+
         public IReadOnlyList<UnitDefinition> Candidates => candidates;
+        public IReadOnlyList<CardDefinition> CommonCards => commonCards;
 
         public static bool IsUnlocked(UnitDefinition character, StageDefinition stage) =>
             character.UnlockStage <= stage.StageNumber;

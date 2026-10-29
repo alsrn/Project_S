@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46be67df0e395944fbee2862e9333847, type: 3}
+  m_Name: Card_Clare_Slaughter
+  m_EditorClassIdentifier: ProjectS::ProjectS.Actions.CardDefinition
+  displayName: "\uC0B4\uC721"
+  baseCost: 5
+  description: "\uD074\uB808\uC5B4\uC758 \uACF5\uACA9\uB825\uC774 \uB300\uD3ED \uC0C1\uC2B9\uD558\uBA70(+70
+    / 2\uD134 \uC9C0\uC18D) \uC801\uC5D0\uAC8C \uD604\uC7AC \uACF5\uACA9\uB825\uC758
+    x5\uBC30\uC758 \uD53C\uD574\uB97C \uC900\uB2E4"
+  targetRequirements:
+  - kind: 0
+    relation: 2
+    requireAlive: 1
+    rangeSource: 0
+    fixedRange: 0
+    requireLineOfSight: 0
+  effects:
+  - rid: 1476500743640580097
+  - rid: 1476500743640580098
+  executeSeconds: 1.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 1476500743640580097
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        label: "\uC0B4\uC721"
+        isDebuff: 0
+        durationRounds: 2
+        modifiers:
+          attackAdd: 70
+          defenseAdd: 0
+          defenseMultiplier: 1
+          moveRangeAdd: 0
+          damageDealtMultiplier: 1
+          damageTakenMultiplier: 1
+    - rid: 1476500743640580098
+      type: {class: DamageEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 0
+        targetIndex: 0
+        attackMultiplier: 5
+        flatDamage: 0
+        ignoreDefense: 0

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46be67df0e395944fbee2862e9333847, type: 3}
+  m_Name: Card_Ader_PoisonShot
+  m_EditorClassIdentifier: ProjectS::ProjectS.Actions.CardDefinition
+  displayName: "\uB9F9\uB3C5\uD0C4"
+  baseCost: 3
+  description: "\uC801\uC5D0\uAC8C \uB9F9\uB3C5\uC744 \uBC1C\uC0AC\uD574 \uC911\uB3C5
+    \uC0C1\uD0DC\uB85C \uB9CC\uB4E0\uB2E4. \uC911\uB3C5 \uC0C1\uD0DC\uC758 \uC801\uC740
+    \uBC29\uC5B4\uB825\uC774 \uAC10\uC18C\uD558\uBA70(\uD604\uC7AC \uBC29\uC5B4\uB825\uC758
+    50%, \uC9C0\uC18D\uC2DC\uAC04 1\uD134) \uBC1B\uB294 \uD53C\uD574\uAC00 2\uBC30\uAC00
+    \uB41C\uB2E4(\uC9C0\uC18D\uC2DC\uAC04 1\uD134). \uBC29\uC5B4\uB825 \uAC10\uC18C\uB97C
+    \uBA3C\uC800 \uACC4\uC0B0\uD55C\uB2E4"
+  targetRequirements:
+  - kind: 0
+    relation: 2
+    requireAlive: 1
+    rangeSource: 0
+    fixedRange: 0
+    requireLineOfSight: 0
+  effects:
+  - rid: 1476500743640580105
+  executeSeconds: 1.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 1476500743640580105
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 0
+        targetIndex: 0
+        label: "\uC911\uB3C5"
+        isDebuff: 1
+        durationRounds: 1
+        modifiers:
+          attackAdd: 0
+          defenseAdd: 0
+          defenseMultiplier: 0.5
+          moveRangeAdd: 0
+          damageDealtMultiplier: 1
+          damageTakenMultiplier: 2

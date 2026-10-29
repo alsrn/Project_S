@@ -1,13 +1,16 @@
 using System.Collections.Generic;
+using ProjectS.Actions;
 using ProjectS.Combat;
 using ProjectS.Core;
+using ProjectS.Targeting;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ProjectS.UI
 {
     /// <summary>
-    /// 손패 표시(화면 하단)와 카드 클릭 → SelectionController.BeginCard 전달. 덱 더미 수도 표시한다.
+    /// 손패 표시(화면 하단)와 카드 클릭 → SelectionController.BeginCard 전달.
+    /// 카드 위에 마우스를 올리면 설명(기획 문구 + 효과 요약)을, 아니면 덱 더미 수를 표시한다.
     /// 카드 선택(UI 조작)은 행동 실행 중에도 가능하다. 실제 사용 가능 여부는 요청 시 판정된다.
     /// </summary>
     public sealed class HandPanel : MonoBehaviour
@@ -19,9 +22,10 @@ namespace ProjectS.UI
         private BattleController battle;
         private SelectionController selection;
         private RectTransform cardRoot;
-        private Text pileInfo;
+        private Text info;
         private readonly Dictionary<CardInstance, Button> buttons = new Dictionary<CardInstance, Button>();
         private CardInstance lastTargeting;
+        private CardInstance hovered;
 
         public static HandPanel Create(BattleController battle, SelectionController selection, PrototypeHud hud)
         {
@@ -32,8 +36,8 @@ namespace ProjectS.UI
 
             float pad = UiLayout.Padding;
             panel.cardRoot = UiFactory.CreateRect(root.transform, "Cards", new Vector2(0.5f, 0f), new Vector2(0f, pad), new Vector2(10f, CardHeight));
-            panel.pileInfo = UiFactory.CreateText(root.transform, "PileInfo", new Vector2(0.5f, 0f), new Vector2(0f, pad + CardHeight + 10f),
-                new Vector2(1920f - UiLayout.SideColumnWidth * 2f, 34f), 20, TextAnchor.MiddleCenter);
+            panel.info = UiFactory.CreateText(root.transform, "CardInfo", new Vector2(0.5f, 0f), new Vector2(0f, pad + CardHeight + 6f),
+                new Vector2(1920f - UiLayout.SideColumnWidth * 2f - 20f, 60f), 18, TextAnchor.LowerCenter);
 
             battle.Deck.Changed += panel.Rebuild;
             panel.Rebuild();
@@ -44,6 +48,7 @@ namespace ProjectS.UI
         {
             foreach (var b in buttons.Values) Destroy(b.gameObject);
             buttons.Clear();
+            hovered = null;
 
             var hand = battle.Deck.Hand;
             float total = hand.Count * CardWidth + Mathf.Max(0, hand.Count - 1) * Spacing;
@@ -54,16 +59,46 @@ namespace ProjectS.UI
                 var button = UiFactory.CreateButton(cardRoot, card.Definition.DisplayName, new Vector2(0.5f, 0f),
                     new Vector2(x - CardWidth * 0.5f, 0f), new Vector2(CardWidth, CardHeight), () => selection.BeginCard(card));
                 ((RectTransform)button.transform).pivot = new Vector2(0f, 0f);
-                button.GetComponentInChildren<Text>().fontSize = 22;
+                button.GetComponentInChildren<Text>().fontSize = 20;
                 UiFactory.SetButtonLabel(button,
-                    $"{card.Definition.DisplayName}  [SP {card.Definition.BaseCost}]\n{card.Owner?.DisplayName ?? "공용"}");
+                    $"{card.Definition.DisplayName}  [SP {card.Definition.BaseCost}]\n{card.Owner?.Definition.DisplayName ?? "공용"} · {TargetLabel(card.Definition)}");
+
+                var relay = button.gameObject.AddComponent<PointerRelay>();
+                relay.Entered = () => SetHovered(card);
+                relay.Exited = () => { if (hovered == card) SetHovered(null); };
                 buttons[card] = button;
             }
 
-            pileInfo.text = $"뽑을 카드 {battle.Deck.DrawPileCount}   손패 {hand.Count}   버린 카드 {battle.Deck.DiscardPileCount}" +
-                            "   (PROTOTYPE: STS 방식 드로우)";
             lastTargeting = null;
             RefreshColors();
+            RefreshInfo();
+        }
+
+        private static string TargetLabel(CardDefinition card)
+        {
+            if (card.TargetRequirements.Count == 0) return "자신";
+            var req = card.TargetRequirements[0];
+            string who = req.relation == TargetRelation.Ally ? "아군 1" : req.relation == TargetRelation.Enemy ? "적 1" : "유닛 1";
+            return req.rangeSource == RangeSource.Unlimited ? $"{who}(사거리 무제한)" : who;
+        }
+
+        private void SetHovered(CardInstance card)
+        {
+            hovered = card;
+            RefreshInfo();
+        }
+
+        private void RefreshInfo()
+        {
+            if (hovered != null)
+            {
+                var def = hovered.Definition;
+                info.text = $"<b>{def.DisplayName}</b> [SP {def.BaseCost}] {def.Description}\n<color=#9fd0ff>{def.DescribeEffects()}</color>";
+                return;
+            }
+
+            info.text = $"뽑을 카드 {battle.Deck.DrawPileCount}   손패 {battle.Deck.Hand.Count}   버린 카드 {battle.Deck.DiscardPileCount}" +
+                        $"   (턴마다 {battle.Session.Rules.DrawPerTurn}장 드로우, 턴 종료 시 손패 버림)";
         }
 
         private void Update()

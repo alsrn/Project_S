@@ -26,3 +26,5 @@ MonoBehaviour:
   spriteRight: {fileID: 0}
   cards:
   - {fileID: 11400000, guid: 71d4ef013ed20a34fa746bc538484fcd, type: 2}
+  - {fileID: 11400000, guid: 20ab8f82915d7d24291dadadd62ae6a6, type: 2}
+  - {fileID: 11400000, guid: 58f3256cf54e74d4b899fd026c38000a, type: 2}

@@ -15,5 +15,5 @@ MonoBehaviour:
   defenseFormula: 0
   minDamage: 1
   debugDamageMultiplier: 15
-  drawPerTurn: 5
+  drawPerTurn: 4
   handLimit: 10

@@ -61,7 +61,7 @@ namespace ProjectS.UI
                 new Vector2(halfW, 56f), OnExitClicked);
 
             unitInfo = UiFactory.CreateText(t, "UnitInfo", new Vector2(0f, 0f), new Vector2(pad, 110f),
-                new Vector2(w, 200f), 21, TextAnchor.LowerLeft);
+                new Vector2(w, 300f), 20, TextAnchor.LowerLeft);
 
             endTurnButton = UiFactory.CreateButton(t, "턴 종료", new Vector2(1f, 0f), new Vector2(-pad, pad),
                 new Vector2(w, 110f), OnEndTurnClicked);
@@ -147,8 +147,11 @@ namespace ProjectS.UI
             string moveState = u.Team == Team.Player
                 ? (battle.Commands.CanMoveThisTurn(u, out _) ? "이동 가능" : "이번 턴 이동 완료")
                 : "";
+            string statuses = u.Statuses.Count == 0 ? ""
+                : "\n" + string.Join("\n", u.Statuses.Select(s =>
+                    $"<color={(s.IsDebuff ? "#ff8877" : "#88ddff")}>{s.Label}: {s.Modifiers.Describe()} ({s.RemainingRounds}턴)</color>"));
             unitInfo.text = $"<b>선택: {u.DisplayName}</b> ({u.Team})\n위치 {u.Coord}  HP {u.Hp}/{u.MaxHp}\n" +
-                            $"공 {u.Attack}  방 {u.Defense}  이동 {u.MoveRange}  사거리 {u.AttackRange}\n{moveState}";
+                            $"공 {u.Attack}  방 {u.Defense}  이동 {u.MoveRange}  사거리 {u.AttackRange}\n{moveState}{statuses}";
         }
     }
 }

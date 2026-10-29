@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46be67df0e395944fbee2862e9333847, type: 3}
+  m_Name: Card_Lian_ShieldUp
+  m_EditorClassIdentifier: ProjectS::ProjectS.Actions.CardDefinition
+  displayName: "\uBC29\uD328 \uD65C\uC131\uD654"
+  baseCost: 2
+  description: "\uC790\uC2E0\uC5D0\uAC8C +20\uC758 \uBC29\uC5B4\uB825\uC744 \uBD80\uC5EC\uD55C\uB2E4.
+    \uCD94\uAC00\uB85C \uD604\uC7AC \uCCB4\uB825\uC758 20%\uB9CC\uD07C \uD68C\uBCF5\uD55C\uB2E4
+    (PROTOTYPE: \uC9C0\uC18D \uBBF8\uAE30\uC7AC \u2192 1\uD134)"
+  targetRequirements: []
+  effects:
+  - rid: 1476500743640580099
+  - rid: 1476500743640580100
+  executeSeconds: 1.2
+  references:
+    version: 2
+    RefIds:
+    - rid: 1476500743640580099
+      type: {class: ApplyStatusEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        label: "\uBC29\uD328 \uD65C\uC131\uD654"
+        isDebuff: 0
+        durationRounds: 1
+        modifiers:
+          attackAdd: 0
+          defenseAdd: 20
+          defenseMultiplier: 1
+          moveRangeAdd: 0
+          damageDealtMultiplier: 1
+          damageTakenMultiplier: 1
+    - rid: 1476500743640580100
+      type: {class: HealEffect, ns: ProjectS.Actions, asm: ProjectS}
+      data:
+        target: 1
+        targetIndex: 0
+        flatAmount: 0
+        percentOfMaxHp: 0
+        percentOfCurrentHp: 0.2

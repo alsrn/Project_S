@@ -96,14 +96,14 @@ namespace ProjectS.EditorTools
             EnsureFolder(CardsFolder);
             EnsureFolder(RulesFolder);
 
-            // 기본값 = 단순 차감, STS 드로우 5장. 테스트 배율 x15(승패 흐름 시험용, 기획 협의값)
+            // 기본값 = 단순 차감, STS 드로우 4장. 테스트 배율 x15(승패 흐름 시험용, 기획 협의값)
             var rules = LoadOrCreate<BattleRules>(RulesPath, so => so.FindProperty("debugDamageMultiplier").floatValue = 15f);
 
             var presentation = SetupArt();
 
             var enemy = CreateUnit(EnemyPath, Raptor);
             // 출처: 라스피 적 기획 — 랩터 능력1 '내려 찍기'(현재 공격력의 피해). 적 능력도 CardDefinition 데이터로 정의.
-            // TODO: 능력2 '돌진'(x2 + 방어 버프) 은 버프 시스템이 없어 미구현
+            // TODO: 능력2 '돌진'(x2 + 방어 버프) — 버프 효과는 생겼지만 적 AI 가 첫 능력만 사용하므로 미구현
             AssignCardsIfEmpty(enemy, CreateBasicAttackCard(
                 new CardSpec("Enemy_Raptor_Slam", "내려 찍기", 0, 1f, "앞발로 강하게 내리쳐 현재 공격력의 피해를 준다")));
             AssignUnitSprites(enemy, "Raptor_front", "Raptor_back", "Raptor_left", "Raptor_right");
@@ -147,6 +147,7 @@ namespace ProjectS.EditorTools
                 var unit = CreateUnit($"{UnitsFolder}/Char_{c.Id}.asset", c);
                 if (BasicAttackCards.TryGetValue(c.Id, out var cardSpec))
                     AssignCardsIfEmpty(unit, CreateBasicAttackCard(cardSpec));
+                EnsureCards(unit, CreateSkillCards(c.Id));
                 if (CharacterSprites.TryGetValue(c.Id, out var sprite))
                     AssignUnitSprites(unit, sprite);
                 return unit;
@@ -159,6 +160,7 @@ namespace ProjectS.EditorTools
                 for (int i = 0; i < characters.Count; i++)
                     list.GetArrayElementAtIndex(i).objectReferenceValue = characters[i];
             });
+            EnsureCommonCards(roster, CreateCommonCards());
 
             EnsureScene(stage, roster, move, rules, presentation);
             EnsureTitleScene(SetupTitleConfig());

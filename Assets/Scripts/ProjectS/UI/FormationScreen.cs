@@ -44,7 +44,7 @@ namespace ProjectS.UI
             var hint = UiFactory.CreateText(root, "Hint", new Vector2(0.5f, 1f), new Vector2(0f, -120f),
                 new Vector2(1200f, 40f), 24, TextAnchor.MiddleCenter);
             hint.text = $"{stage.DisplayName} - 출격할 캐릭터를 선택하세요 (1~{stage.PartySize}명).  " +
-                        "PROTOTYPE 덱: 출격 캐릭터의 평타 카드 각 1장 (공용 카드 선택 미구현)";
+                        "PROTOTYPE 덱: 출격 캐릭터의 카드 각 1장 + 공용 카드 (덱 선택 UI 미구현)";
 
             const float buttonHeight = 60f;
             const float spacing = 10f;
@@ -60,8 +60,8 @@ namespace ProjectS.UI
                 buttons[def] = button;
             }
 
-            status = UiFactory.CreateText(root, "Status", new Vector2(0.5f, 0f), new Vector2(0f, 150f),
-                new Vector2(1200f, 40f), 26, TextAnchor.MiddleCenter);
+            status = UiFactory.CreateText(root, "Status", new Vector2(0.5f, 0f), new Vector2(0f, 140f),
+                new Vector2(1700f, 80f), 22, TextAnchor.MiddleCenter);
 
             UiFactory.CreateButton(root, "출격", new Vector2(0.5f, 0f), new Vector2(0f, 60f), new Vector2(300f, 70f), Confirm);
 
@@ -94,7 +94,7 @@ namespace ProjectS.UI
                 return;
             }
 
-            var party = PartySelection.WithCharacterCards(selected);
+            var party = PartySelection.WithCharacterCards(selected, roster.CommonCards);
             Destroy(gameObject);
             onConfirm(party);
         }
@@ -115,8 +115,9 @@ namespace ProjectS.UI
             }
 
             status.color = error != null ? new Color(1f, 0.5f, 0.4f) : Color.white;
-            string deck = string.Join(", ", selected.SelectMany(d => d.Cards.Where(c => c != null).Select(c => $"{c.DisplayName}(SP {c.BaseCost})")));
-            status.text = error ?? $"선택 {selected.Count} / {stage.PartySize}     덱: {(deck.Length > 0 ? deck : "없음")}";
+            var deckCards = PartySelection.WithCharacterCards(selected, roster.CommonCards).Deck;
+            string deck = string.Join(", ", deckCards.Select(e => e.Card.DisplayName));
+            status.text = error ?? $"선택 {selected.Count} / {stage.PartySize}     덱 {deckCards.Count}장: {(deck.Length > 0 ? deck : "없음")}";
         }
     }
 }

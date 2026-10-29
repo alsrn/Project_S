@@ -24,7 +24,8 @@ namespace ProjectS.Combat
         [SerializeField, Min(0f)] private float debugDamageMultiplier = 1f;
 
         [Header("덱 (Slay the Spire 방식)")]
-        [SerializeField, Min(0)] private int drawPerTurn = 5;
+        [Tooltip("턴 시작 시 드로우 수. 덱(10장 내외)이 2~3턴마다 순환하도록 4(기획 협의: 3~4장)")]
+        [SerializeField, Min(0)] private int drawPerTurn = 4;
         [SerializeField, Min(1)] private int handLimit = 10;
 
         public int DrawPerTurn => drawPerTurn;
